@@ -69,6 +69,9 @@ Get-ApiConfig
 ### Run a remote action
 
   ```PowerShell
+  # Setup for calling a basic RA.
+  $remoteActionId = 'get_chrome_plugins'
+  $deviceIdList = @('2bdb0941-2507-40de-854a-3efa1784b26b','d0debb1b-fc48-4eb1-81fa-8a799b21d108')
   Invoke-RemoteAction -remoteActionId $remoteActionId -deviceIdList $deviceIdList
   ```
   
