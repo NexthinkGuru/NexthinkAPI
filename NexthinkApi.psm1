@@ -1,31 +1,3 @@
-<#
-.SYNOPSIS
-Enables PowerShell using the Nexthink Infinity API's
-
-.DESCRIPTION
-
-.INPUTS
-Setting up stored credentials
-On the server that will be running the Nexthink Module, open PowerShell under the credentials of the local user you created earlier 
-using the runas command on the command line: runas /user:nxt-ctx-connector powershell.exe
-
-runas CLI
-In the newly opened PowerShell window, add the API credentials you just created in the Nexthink web interface by writing the following command:
-New-StoredCredential -Target "nxt-ctx-prod" -UserName <ClientID> -Password <ClientSecret> -Persist LocalMachine
-
-Replace the <domain\username> and <password> with the values you noted down when creating a domain user account with read-only Citrix administrator.
-
-Make a note of the TargetName you used as you will need this value for the configuration file.
-
-.OUTPUTS
-
-.NOTES
-Version:            0.0.0.1 - Dev release
-Last Generated:     08 May 2023
-Author:             Pat Gudat (pgudat@nexthink.com)
-
-#>
-
 # Forcing Tls1.2 to avoid SSL failures
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
