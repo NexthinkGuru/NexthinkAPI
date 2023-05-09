@@ -1,52 +1,13 @@
 ﻿# Sample data
 
-<#
-1) Ensure the credentials are saved
-    New-StoredCredential -Target <Credential object name> -UserName <ClientID> -Password <ClientSecret> -Persist LocalMachine
-2) Be sure to save the configuration in the NexthinkAPI section of the config.json file or a custom json if used
-    "NexthinkAPI": {
-        "InstanceName": "psna",
-        "Region": "eu.pre",
-        "OAuthCredentialEntry": "psna-test-1",
-        "RequestBatchSize": "1000"
-    }
-#>
-
-<#
-# An enrichment is an array of identifyable objects plus an array of fields
-        {
-            "identification": [
-            {
-                "name": "device/device/name",
-                "value": "DEVICE-1"
-            }
-            ],
-            "fields": [
-            {
-                "name": "device/device/virtualization/desktop_pool",
-                "value": "Desktop Pool DC2"
-            },
-            {
-                "name": "device/device/virtualization/type",
-                "value": 2
-            },
-            {
-                "name": "device/device/#<custom_field_name>",
-                "value": "custom_value_1"
-            }
-            ]
-        }
-
-#>
-
 # Requires -Module NexthinkApi
-Import-Module .\NexthinkApi.psm1
+Import-Module "C:\Users\pgudat\OneDrive - Nexthink SA\Development\Infinity\GIT\NexthinkAPI\NexthinkAPI\NexthinkApi.psm1"
 
 # Will read in the Configuration file (optionally passed or default config.json) and get a Token for API Calls
-Initialize-NexthinkAPI
+Initialize-NexthinkAPI -Config "C:\Users\pgudat\OneDrive - Nexthink SA\Development\Infinity\GIT\NexthinkAPI\Sample\config.json"
 
 # Shows the configuration data used in the API Calls Used to validate the config
-Get-ApiConfig
+#Get-ApiConfig
 
 # # #
 # Data Enricher API
@@ -54,11 +15,12 @@ $fieldName  = 'device.#biosUpToDate'    # The name of the field we need to enric
 $objectName = 'device.name'             # The name of the field to be used to ID the object
 
 $objectValueMap = @{                   # hashtable of data values.
-    'SENATORMARC' = 'duh'
+    'SENATORMARC' = 'duh2'
+    'RAGH-BOX' = "Nope2"
 }
 
 # Create the enrichment variable to send to the enricher
-$mySingleFieldEnrichment = (New-SingleFieldEnrichment -fieldName $fieldName -objectName $objectName -ObjectValues $objectValueMap)[1]
+$mySingleFieldEnrichment = New-SingleFieldEnrichment -fieldName $fieldName -objectName $objectName -ObjectValues $objectValueMap
 
 # Now we can send it to the enricher
 Invoke-EnrichmentRequest -Enrichment $mySingleFieldEnrichment

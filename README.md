@@ -6,12 +6,12 @@ This Powershell Module provides a serices of cmdlets for interacting with the Ne
 ## Requirements
 
 Requires PowerShell 5.1 or above.
-
-The Credential Manager module should be installed from the [PowerShell Gallery](https://www.powershellgallery.com/packages/CredentialManager/2.0) with `Install-Module CredentialManager`.
+Requires PowerShell Module Credential Manager [PowerShell Gallery](https://www.powershellgallery.com/packages/CredentialManager/2.0) with `Install-Module CredentialManager`.
+Requires PowerShell Module Logging [PowerShell Gallery](https://www.powershellgallery.com/packages/Logging/4.8.5) with `Install-Module Logging`.
 
 ## Usage
 
-The NexthinkAPI module should be installed from the [PowerShell Gallery](https://www.powershellgallery.com/packages/Nexthink) with `Install-Module Nexthink`.
+The NexthinkAPI module should be installed from the [PowerShell Gallery](https://www.powershellgallery.com/packages/NexthinkAPI) with `Install-Module NexthinkAPI`.
 
 ### Obtain API Credentials
 

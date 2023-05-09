@@ -2,7 +2,7 @@
     "_Info": "This is the JSON based configuration for the Nexthink Infinity API's",
     "Logging": {
         "LogRetentionDays": 7,
-        "LogLevel": "INFO",
+        "LogLevel": "DEBUG",
         "Path": "./Logs/"
     },
     "NexthinkAPI": {

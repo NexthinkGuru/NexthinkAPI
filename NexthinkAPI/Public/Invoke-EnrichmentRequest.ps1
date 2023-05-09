@@ -22,7 +22,7 @@
     )
 
     $uri = $CONFIG._API.BASE + $path
-    $bodyJson = $body | ConvertTo-Json -Depth 8
+    $bodyJson = $body | ConvertTo-Json -Depth 8 -Compress
 
     Set-Jwt
 
@@ -35,11 +35,13 @@
     }
 
     try {
+        Write-CustomLog -Message "Invoking Enrichment: $Uri" -Severity "DEBUG"
+        Write-CustomLog -Message "Enrichment Body: $BodyJson" -Severity "DEBUG"
         $response = Invoke-RestMethod @invokeParams
-        $responseJson = $response | ConvertFrom-Json $response
-        if ($responseJson.status -ne 'success') {
-            throw $reponseJson.errors
+        if ($response.status -ne 'success') {
+            throw $response.errors
         }
+        Write-CustomLog -Message "Response:$response " -Severity "DEBUG"
     } catch [System.Net.WebException] {
         # A web error has occurred
         $StatusCode = $_.Exception.Response.StatusCode.Value__
@@ -58,6 +60,7 @@
                     description = 'Bad request - invalid enrichment.'
                     Errors = $($NexthinkMsg.errors)
                 }
+                Write-CustomLog -Message $OutputObject.description -Severity 'ERROR'
                 throw $OutputObject
             }
 
@@ -70,6 +73,7 @@
                     NexthinkCode = $($NexthinkMsg.code)
                     message = $($NexthinkMsg.message)
                 }
+                Write-CustomLog -Message $($OutputObject.message) -Severity 'ERROR'
                 throw $OutputObject
             }
 
@@ -81,7 +85,8 @@
                     description = "Forbidden - no permission to trigger enrichment"
                     NexthinkCode = $($NexthinkMsg.code)
                     message = $($NexthinkMsg.message)
-                }                
+                }
+                Write-CustomLog -Message $($OutputObject.message) -Severity 'ERROR'
                 throw $OutputObject
             }
 

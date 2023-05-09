@@ -13,6 +13,8 @@
 
         return @{ clientId = $userName; clientSecret = $unsecurePassword }
     } else {
-        throw "Credentials not found or they are empty for Target: $Target"
+        $message = "Credentials not found or they are empty for Target: $Target"
+        Write-CustomLog -Message $message -Severity "ERROR"
+        throw $message
     }
 }
