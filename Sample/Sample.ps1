@@ -1,13 +1,13 @@
 ﻿# Sample data
 
 # Requires -Module NexthinkApi
-Import-Module "C:\Users\pgudat\OneDrive - Nexthink SA\Development\Infinity\GIT\NexthinkAPI\NexthinkAPI\NexthinkApi.psm1"
+# Import-Module ".\NexthinkAPI\NexthinkApi.psm1"
 
 # Will read in the Configuration file (optionally passed or default config.json) and get a Token for API Calls
 Initialize-NexthinkAPI -Config "C:\Users\pgudat\OneDrive - Nexthink SA\Development\Infinity\GIT\NexthinkAPI\Sample\config.json"
 
 # Shows the configuration data used in the API Calls Used to validate the config
-#Get-ApiConfig
+# Get-ApiConfig
 
 # # #
 # Data Enricher API
