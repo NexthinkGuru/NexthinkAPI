@@ -1,18 +1,14 @@
 {
     "_Info": "This is the JSON based configuration for the Nexthink Infinity API's",
-    "Info": {
-        "Project": "Nexthink-api-module",
-        "ConfigVersion": "1.0.0"
-    },
     "Logging": {
         "LogRetentionDays": 7,
         "LogLevel": "INFO",
         "Path": "./Logs/"
     },
     "NexthinkAPI": {
-        "InstanceName": "psna",
-        "Region": "eu.pre",
-        "OAuthCredentialEntry": "psna-test-1",
+        "InstanceName": "<customerinstance>",
+        "Region": "<datacenter region>",
+        "OAuthCredentialEntry": "<saved credential entry name>",
         "RequestBatchSize": "1000"
     }
 }
