@@ -1,0 +1,76 @@
+﻿{
+    "ResponseCodes": {
+        "Campaign": [
+            {
+                "Code": 200,
+                "Status": "OK",
+                "Message": "Successful triggering"
+            },
+            {
+                "Code": 400,
+                "Status": "Bad request",
+                "Message": "Invalid enrichment, see error codes for details"
+            },            
+            {
+                "Code": 401,
+                "Status": "Unauthorized",
+                "Message": "No valid authentication credentials."
+            }
+        ],
+        "Enrich": [
+            {
+                "Code": 200,
+                "Status": "OK",
+                "Message": "Successful triggering"
+            },
+            {
+                "Code": 400,
+                "Status": "Bad request",
+                "Message": "Invalid request, see the error code for details"
+            },            
+            {
+                "Code": 401,
+                "Status": "Unauthorized",
+                "Message": "No valid authentication credentials."
+            }
+        ]
+    },
+
+    "APIs": {
+        "BASE": "/api/v1",
+        "OAUTH": {
+            "Method": "POST",
+            "uri": "/token"
+        },
+        "Campaign": {
+            "Method": "POST",
+            "uri": "/euf/campaign/trigger"
+        },
+        "RA_Exec": {
+            "Method": "POST",
+            "uri": "/act/execute"
+        },
+        "RA_List": {
+            "Method": "GET",
+            "uri": "/act/remote-action"
+        },
+        "RA_Details": {
+            "uri": "/details?nql-id="
+        },
+        "Enrich": {
+            "Method": "POST",
+            "uri": "/enrichment/data/fields"
+        }
+    },
+
+    "EnrichmentIDMap": {
+        "device.name": "device/device/name",
+        "device.uid": "device/device/uid",
+        "user.sid": "user/user/sid",
+        "user.uid": "user/user/uid",
+        "binary.uid": "binary/binary/uid",
+        "package.uid": "package/package/uid"
+    }
+
+}
+

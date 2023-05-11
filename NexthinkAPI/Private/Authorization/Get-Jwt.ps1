@@ -14,11 +14,12 @@
     [CmdletBinding()]
     param ()
 
-    $uri = $CONFIG._API.BASE + $API_PATHS.OAUTH
+    $uri = $CONFIG._API.BASE + $MAIN.APIs.OAUTH.uri
 
     # Invoke-WebRequests usually displays a progress bar. The $ProgressPreference variable determines whether this is displayed (default value = Continue)
     $ProgressPreference = 'SilentlyContinue'  
     try {
+        Write-CustomLog "Getting Credentials for $($CONFIG.NexthinkAPI.OAuthCredentialEntry) " -Severity "DEBUG"
         $credentials = Get-ClientCredentials -Target $CONFIG.NexthinkAPI.OAuthCredentialEntry
 
         $basicHeader = Get-StringAsBase64 -InputString "$($credentials.clientId):$($credentials.clientSecret)"

@@ -6,5 +6,4 @@
     )
     $CONFIG._API.headers.Authorization = "Bearer " + $Token
     $CONFIG._API.headers.'x-enrichment-trace-id' = ([guid]::NewGuid()).Guid
-    Write-CustomLog -Message "x-enrichment-trace-id: $($CONFIG._API.headers.'x-enrichment-trace-id')" -Severity "DEBUG"
 }

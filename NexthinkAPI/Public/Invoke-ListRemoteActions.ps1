@@ -1,4 +1,5 @@
 ﻿function Invoke-ListRemoteActions {
+    [OutputType([PSCustomObject])]
     <#
     .SYNOPSIS
         Lists available Remote Actions
@@ -13,88 +14,29 @@
     #>
     [CmdletBinding()]
     param(
-        # path of the request
-        $path=$API_PATHS.RA_LIST,
-
         [parameter(Mandatory=$false)]
         [Alias('nqlId')]
         [string]$remoteActionId
     )
+    $ApiType = 'RA_List'
+    $query = $null
 
-    $uri = $CONFIG._API.BASE + $path
-    if ($null -ne $remoteActionId) {
+    if ($null -ne $remoteActionId -and '' -ne $remoteActionId) {
         $remoteActionIdEncoded = [System.Web.HttpUtility]::UrlEncode($remoteActionId)
-        $uri = -join ($uri,$API_PATHS.RA_DETAILS,$remoteActionIdEncoded)
+        $query = -join ($MAIN.APIs.RA_Details.uri,$remoteActionIdEncoded)
+        Write-Verbose "Query: $query"
     }
 
-    Set-Jwt
-
-    $invokeParams = @{
-        Uri = $uri
-        Method = 'GET'
-        Headers = $CONFIG._API.headers
-        ContentType = 'application/json'
-    }
-
-    try {
-        $response = Invoke-RestMethod @invokeParams
-    } catch [System.Net.WebException] {
-        # A web error has occurred
-        $StatusCode = $_.Exception.Response.StatusCode.Value__
-        $Headerdetails = $_.Exception.Response.Headers
-        $ThisException = $_.Exception
-        $NexthinkMsgJson = $_
-        $NexthinkMsg = $NexthinkMsgJson | ConvertFrom-Json
-    
-        switch ($StatusCode)
-        {
-            400 {
-                # Bad Request
-                $OutputObject = [PSCustomObject]@{
-                    error = 400
-                    'Path&Query' = $thisException.Response.ResponseUri.PathAndQuery
-                    description = 'Bad request - invalid enrichment.'
-                    Errors = $($NexthinkMsg.errors)
-                }
-                throw $OutputObject
+    $actionList = Invoke-NxtApi -Type $ApiType -Query $query -ReturnResponse
+ 
+     # Process through the responses, only returning the ones we want.
+    if ($null -ne $actionList) {
+        foreach ($RA in $actionList) {
+            if ($RA.targeting.apiEnabled) { 
+                $RA
             }
-
-            401 {
-                # Authentication Failure
-                $OutputObject = [PSCustomObject]@{
-                    error = 401
-                    'Path&Query' = $thisException.Response.ResponseUri.PathAndQuery
-                    description = "Unauthorized - invalid authentication credentials"
-                    NexthinkCode = $($NexthinkMsg.code)
-                    message = $($NexthinkMsg.message)
-                }
-                throw $OutputObject
-            }
-
-            403 {
-                # Forbidden
-                $OutputObject = [PSCustomObject]@{
-                    error = 403
-                    'Path&Query' = $thisException.Response.ResponseUri.PathAndQuery
-                    description = "Forbidden - no permission to trigger enrichment"
-                    NexthinkCode = $($NexthinkMsg.code)
-                    message = $($NexthinkMsg.message)
-                }                
-                throw $OutputObject
-            }
-
-            default {
-                throw
-            }
-        }
-    } catch {
-        throw $_
-    }
-    
-    # Process through the responses, only returning the ones we want.
-    if ($null -ne $remoteActionId) {
-        foreach ($RA in $response) {
-            if ($RA.targeting.apiEnabled) { $RA }
         } 
-    } else { $response }
+    } else {
+        $actionList
+    }
 }

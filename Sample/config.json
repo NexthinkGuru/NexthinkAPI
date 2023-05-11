@@ -9,6 +9,6 @@
         "InstanceName": "psna",
         "Region": "eu.pre",
         "OAuthCredentialEntry": "psna-test-1",
-        "RequestBatchSize": "1000"
+        "RequestBatchSize": 1000
     }
 }

@@ -6,7 +6,7 @@
     New-Variable -Name 'LOG_LEVEL' -Value 'INFO' -Scope Script -Force
 
     if ($CONFIG.Logging.LogLevel) { $LOG_LEVEL = $CONFIG.Logging.LogLevel }
-    if ($CONFIG.Logging.LogRetentionDays) { $LOG_RETENTION_DAYS = $CONFIG.Logging.LogRetentionDays }
+    if ($CONFIG.Logging.LogRetentionDays) { $LOG_RETENTION_DAYS = [Int]$CONFIG.Logging.LogRetentionDays }
     if ($CONFIG.Logging.Path) { $LOGS_FOLDER = $CONFIG.Logging.Path }
 
     New-Variable -Name 'LOGFILE_NAME' -Value "$LOGS_FOLDER\NexthinkApi-%{+yyyyMMdd}.log" -Option ReadOnly -Scope Script -Force
