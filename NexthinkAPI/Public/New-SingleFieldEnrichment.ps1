@@ -20,10 +20,11 @@
 
     $FieldId = Get-FieldID -Name $fieldName
 
-    $ObjectId = $ENRICHMENT_IDS.$ObjectName
+    $ObjectId = $MAIN.EnrichmentIDMap.$ObjectName
     if ($null -eq $ObjectId) {
-        Write-CustomLog "Invalid Object Selection: $ObjectName.  Choose one of the following: $($ENRICHMENT_IDS.keys)" -Severity "ERROR"
-        throw "Invalid Object Selection: $ObjectName.  Choose one of the following: $($ENRICHMENT_IDS.keys)"
+        $message = "Invalid Object Selection: $ObjectName"
+        Write-CustomLog $message -Severity "ERROR"
+        throw $message
     }
     
     Write-CustomLog -Message "Enriching Field $FieldId of $ObjectId " -Severity "DEBUG"

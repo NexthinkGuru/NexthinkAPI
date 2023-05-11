@@ -1,13 +1,14 @@
 [cmdletbinding()]
 param()
 
+Write-Verbose $PSScriptRoot
+
 # Requires -Module Logging
 # Requires -Module CredentialManager
 $modules = 'Logging', 'CredentialManager'
 $installed = @((Get-Module $modules -ListAvailable).Name | Select-Object -Unique)
 $notInstalled = Compare-Object $modules $installed -PassThru
-if ($notInstalled) { # At least one module is missing.
-  # Prompt for installing the missing ones.
+if ($notInstalled) { 
   $promptText = @"
   The following modules aren't currently installed:
   
@@ -23,6 +24,11 @@ if ($notInstalled) { # At least one module is missing.
   Install-Module -Scope CurrentUser $notInstalled
 }
 
+# Load in configuration
+$MAIN = ConvertFrom-Json (Get-Content "$PSScriptRoot\config\main.json" -Raw)
+Set-Variable -Name MAIN -Option ReadOnly -Scope Script -Force
+Export-ModuleMember -Variable MAIN
+
 foreach ($Folder in @('Private', 'Public')) {
     $Root = Join-Path -Path $PSScriptRoot -ChildPath $Folder
     if (Test-Path -Path $Root) {
@@ -36,4 +42,3 @@ foreach ($Folder in @('Private', 'Public')) {
 }
 
 Export-ModuleMember -Function (Get-ChildItem -Path "$PSScriptRoot\Public\*.ps1").BaseName
-

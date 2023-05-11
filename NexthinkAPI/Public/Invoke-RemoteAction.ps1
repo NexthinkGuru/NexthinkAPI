@@ -11,7 +11,7 @@
         This does not accept pipeline input.
     .OUTPUTS
         Object. 
-    .NOTES
+    .NOTESn
     #>
     [CmdletBinding()]
     param(
@@ -24,7 +24,11 @@
 
         [parameter(Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
-        [Array]$deviceIdList,
+        [Alias('DeviceIdList')]
+        [Array]$devices,
+        
+        [Alias('Expires')]
+        [Int]$expiresInMinutes = 10800,
         
         [parameter(Mandatory=$false)]
         [hashtable]$Parameters
