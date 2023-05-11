@@ -73,6 +73,8 @@ Initialize-NexthinkAPI -Path .\config\my_custom.json
 ```PowerShell
 Get-ApiConfig
 ```
+
+## Remote Actions
   
 ### List the Remote Actions that are available to run via API
 
