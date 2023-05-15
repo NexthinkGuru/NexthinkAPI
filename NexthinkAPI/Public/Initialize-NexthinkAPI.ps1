@@ -29,8 +29,7 @@
     $baseHeaders.Add("Content-Type", "application/json")
     $baseHeaders.Add("Accept", "application/json")
     $baseHeaders.Add("Authorization", "")
-    $baseHeaders.Add("x-enrichment-trace-id", "0")
-    $baseHeaders.Add("nx-source", $null)
+    # $baseHeaders.Add("nx-source", $null)
     
     # Retrieve the configuration json file
     New-Variable -Name CONFIG -Scope Script -Value $(Get-Content $Path | ConvertFrom-Json) -Force
@@ -44,6 +43,6 @@
     # Start the logger
     Initialize-Logger
 
-    # Check and get the new Jwt if needed
-    Set-Jwt
+    # Ensure we have a JWT that's valid with headers set
+    Set-Headers
 }

@@ -33,11 +33,51 @@
                 "Status": "Unauthorized",
                 "Message": "No valid authentication credentials."
             }
+        ],
+        "RA": [
+            {
+                "Code": 200,
+                "Status": "OK",
+                "Message": "Successful triggering"
+            },
+            {
+                "Code": 400,
+                "Status": "Bad request",
+                "Message": "Invalid request, see the error code for details"
+            },            
+            {
+                "Code": 401,
+                "Status": "Unauthorized",
+                "Message": "No valid authentication credentials."
+            }
+        ],
+        "NQL": [
+            {
+                "Code": 200,
+                "Status": "OK",
+                "Message": "Successful triggering"
+            },
+            {
+                "Code": 400,
+                "Status": "Bad request",
+                "Message": "Invalid request, see the error code for details"
+            },            
+            {
+                "Code": 401,
+                "Status": "Unauthorized",
+                "Message": "No valid authentication credentials."
+            },
+            {
+                "Code": 429,
+                "Status": "Too many reqeusts",
+                "Message": "Please wait the desired time before sending again."
+            }
         ]
     },
 
     "APIs": {
         "BASE": "/api/v1",
+        "DETAILS": "/details?nql-id=",
         "OAUTH": {
             "Method": "POST",
             "uri": "/token"
@@ -54,12 +94,24 @@
             "Method": "GET",
             "uri": "/act/remote-action"
         },
-        "RA_Details": {
-            "uri": "/details?nql-id="
-        },
         "Enrich": {
             "Method": "POST",
-            "uri": "/enrichment/data/fields"
+            "uri": "enrichment/data/fields",
+            "Headers" : {
+                "x-enrichment-trace-id": "0"
+            }
+        },
+        "NQL": {
+            "Method": "POST",
+            "uri": "/execute"
+        },
+        "WF_Exec": {
+            "Method": "POST",
+            "uri": "/workflow/execute"
+        },
+        "WF_List": {
+            "Method": "GET",
+            "uri": "/workflow/workflow"
         }
     },
 

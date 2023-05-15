@@ -1,9 +1,9 @@
 ﻿function Set-Headers {
     [CmdletBinding()]
-    param (
-        [Parameter(Mandatory=$true)]
-        [String]$Token
-    )
-    $CONFIG._API.headers.Authorization = "Bearer " + $Token
-    $CONFIG._API.headers.'x-enrichment-trace-id' = ([guid]::NewGuid()).Guid
+    param ()
+    if ($CONFIG._API.expires.AddMinutes(1) -lt (Get-Date)) {        
+        $localToken = Get-Jwt
+        $CONFIG._API.expires = $localToken.expires
+        $CONFIG._API.headers.Authorization = "Bearer " + $localToken.token
+    }
 }

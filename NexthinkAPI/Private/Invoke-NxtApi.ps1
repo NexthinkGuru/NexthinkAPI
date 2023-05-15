@@ -14,8 +14,10 @@
 
     $method = $MAIN.APIs.$ApiType.Method
 
-    # Ensure we have a JWT that's valid
-    Set-Jwt
+    # Ensure we have a JWT that's valid with headers set
+    Set-Headers
+
+    #     $CONFIG._API.headers.'x-enrichment-trace-id' = ([guid]::NewGuid()).Guid
 
     # Set base IWR Parameters
     $invokeParams = @{
