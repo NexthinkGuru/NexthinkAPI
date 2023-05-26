@@ -10,14 +10,12 @@
         [switch]$ReturnResponse
     )
 
-    $uri = $CONFIG._API.BASE + $MAIN.APIs.$ApiType.uri + $Query
+    $uri = $CONFIG._API.BASE + $MAIN.APIs.$Type.uri + $Query
 
-    $method = $MAIN.APIs.$ApiType.Method
+    $method = $MAIN.APIs.$Type.Method
 
     # Ensure we have a JWT that's valid with headers set
     Set-Headers
-
-    #     $CONFIG._API.headers.'x-enrichment-trace-id' = ([guid]::NewGuid()).Guid
 
     # Set base IWR Parameters
     $invokeParams = @{
@@ -26,12 +24,16 @@
         Headers = $CONFIG._API.headers
         ContentType = 'application/json'
     }
+    $mst = "Params: $invokeParams"
+    Write-Verbose $msg
+    Write-CustomLog $msg -Severity "DEBUG"
 
     # Add a body if we have one
     if ($null -ne $Body -and '' -ne $Body) {
         $invokeParams.Add('Body', $Body)
-        Write-Verbose "Request: $Body"
-        Write-CustomLog "Request: $Body" -Severity "DEBUG"
+        $msg = "Request: $Body"
+        Write-Verbose $msg
+        Write-CustomLog $msg -Severity "DEBUG"
     }
 
     try {
@@ -40,27 +42,38 @@
         Write-CustomLog -Message "Response: $responseJson" -Severity "DEBUG"
         Write-Verbose "Response: $responseJson"
 
+        if ($response.StatusCode -ne 200) {}
+
     } catch [System.Net.WebException] {
         # A web error has occurred
-        $StatusCode = $_.Exception.Response.StatusCode.Value__
-        $ThisException = $_.Exception
-        $NexthinkMsg = $_ | ConvertFrom-Json
-        $Message = $_.ErrorDetails.Message | ConvertFrom-Json
-        $matchCode = $MAIN_CONFIG.ResponseCodes.$Type | where-Object {$_.Code -eq $StatusCode}
+        $statusCode = $_.Exception.Response.statusCode.Value__
+        $errorMessage = $_.ErrorDetails.Message | ConvertFrom-Json
 
-        $OutputObject = [PSCustomObject]@{
-            error = $StatusCode
-            'Path&Query' = $thisException.Response.ResponseUri.PathAndQuery
-            description = $matchCode.Message
-            NexthinkCode = $($NexthinkMsg.code)
-            Errors = $($NexthinkMsg.errors)
+        if ($null -eq $MAIN.ResponseCodes.$Type) {
+            $lookupType = $Type -replace "_.*$"
+        }
+        else {
+            $lookupType = $Type
         }
 
-        if ($null -ne $Message -and $null -eq $NexthinkMsg) {
-            $OutputObject.Errors = $Message._embedded.errors.message
-        } 
-        Write-CustomLog -Message $($OutputObject) -Severity 'ERROR'
-        throw $OutputObject
+        $responseCodes = $MAIN.ResponseCodes.$lookupType
+        $matchedCode = $responseCodes | where-Object {$_.Code -eq $statusCode}
+        if ($null -ne $matchedCode.keys) {
+            $matchedKeys = $($matchedCode.keys).split(',')
+            foreach ($key in $matchedKeys) {
+                $subMessage = $errorMessage.$key
+                if ($subMessage.gettype().Name -ne "String") {
+                    $subMessage = $errorMessage.$key | ConvertTo-Json -compress
+                }
+                $message = "$key : $subMessage"
+                Write-Warning $message
+                Write-CustomLog -Message $message -Severity 'ERROR'
+            }
+        }
+        
+        $message = "Error $statusCode - $($matchedCode.Message)"
+        Write-CustomLog -Message $message -Severity 'ERROR'
+        throw $message
     } catch {
         throw $_
     }

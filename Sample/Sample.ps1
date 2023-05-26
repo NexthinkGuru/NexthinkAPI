@@ -1,10 +1,10 @@
 ﻿# Sample data
 
 # Requires -Module NexthinkApi
-#Import-Module ".\NexthinkAPI\NexthinkApi.psm1"
+Import-Module ".\NexthinkAPI\NexthinkApi.psm1"
 
 # Will read in the Configuration file (optionally passed or default config.json) and get a Token for API Calls
-Initialize-NexthinkAPI -Config ".\NexthinkAPI\Sample\config.json"
+Initialize-NexthinkAPI -Config ".\Sample\config.json"
 
 # # Shows the configuration data used in the API Calls Used to validate the config
 Get-ApiConfig
@@ -16,8 +16,8 @@ $fieldName  = 'device.#biosUpToDate'    # The name of the field we need to enric
 $objectName = 'device.name'             # The name of the field to be used to ID the object
 
 $objectValueMap = @{                   # hashtable of data values.
-    'SENATORMARC' = 'duh3'
-    'RAGH-BOX' = "Nope3"
+    'SENATORMARC' = 'duh4'
+    'RAGH-BOX2' = "Nope3"
 }
 
 # Create the enrichment variable to send to the enricher

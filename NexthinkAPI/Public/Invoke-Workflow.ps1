@@ -43,5 +43,5 @@
 
     $bodyJson = $body | ConvertTo-Json -Depth 4
 
-    Invoke-NxtApi -Type $ApiType -Body $bodyJson
+    Invoke-NxtApi -Type $ApiType -Body $bodyJson -ReturnResponse
 }
