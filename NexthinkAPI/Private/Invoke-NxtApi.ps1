@@ -24,7 +24,7 @@
         Headers = $CONFIG._API.headers
         ContentType = 'application/json'
     }
-    $mst = "Params: $invokeParams"
+    $msg = "Params: $($invokeParams.GetEnumerator() | ForEach-Object { '{0}:{1},' -f $_.key, $_.value })"
     Write-Verbose $msg
     Write-CustomLog $msg -Severity "DEBUG"
 

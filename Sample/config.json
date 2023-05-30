@@ -5,13 +5,13 @@
         "LogLevel": "DEBUG",
         "Path": "./Logs/"
     },
-    "NexthinkAPI": {
+    "NexthinkAPI_pre-release": {
         "InstanceName": "pre-release",
         "Region": "eu.dev",
         "OAuthCredentialEntry": "prerelease-dev",
         "RequestBatchSize": 1000
     },
-    "NexthinkAPI_psna": {
+    "NexthinkAPI": {
         "InstanceName": "psna",
         "Region": "eu.pre",
         "OAuthCredentialEntry": "psna-test-1",
