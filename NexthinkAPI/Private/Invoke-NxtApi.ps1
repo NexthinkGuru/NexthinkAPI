@@ -10,12 +10,12 @@
         [switch]$ReturnResponse
     )
 
-    $uri = $CONFIG._API.BASE + $MAIN.APIs.$ApiType.uri + $Query
+    $uri = $CONFIG._API.BASE + $MAIN.APIs.$Type.uri + $Query
 
-    $method = $MAIN.APIs.$ApiType.Method
+    $method = $MAIN.APIs.$Type.Method
 
-    # Ensure we have a JWT that's valid
-    Set-Jwt
+    # Ensure we have a JWT that's valid with headers set
+    Set-Headers
 
     # Set base IWR Parameters
     $invokeParams = @{
@@ -24,12 +24,17 @@
         Headers = $CONFIG._API.headers
         ContentType = 'application/json'
     }
+    $msg = "Invoke Web Request Params: `n$($invokeParams.GetEnumerator() | ForEach-Object { "{0}:{1}" -f $_.key, ($_.value | Out-String) })"
+    Write-Verbose ($msg | Out-String)
+    Write-CustomLog $msg -Severity "DEBUG"
 
     # Add a body if we have one
     if ($null -ne $Body -and '' -ne $Body) {
         $invokeParams.Add('Body', $Body)
-        Write-Verbose "Request: $Body"
-        Write-CustomLog "Request: $Body" -Severity "DEBUG"
+        $msg = "Request Body: 
+    $Body"
+        Write-Verbose ($msg | Out-String)
+        Write-CustomLog $msg -Severity "DEBUG"
     }
 
     try {
@@ -40,25 +45,78 @@
 
     } catch [System.Net.WebException] {
         # A web error has occurred
-        $StatusCode = $_.Exception.Response.StatusCode.Value__
-        $ThisException = $_.Exception
-        $NexthinkMsg = $_ | ConvertFrom-Json
-        $Message = $_.ErrorDetails.Message | ConvertFrom-Json
-        $matchCode = $MAIN_CONFIG.ResponseCodes.$Type | where-Object {$_.Code -eq $StatusCode}
-
-        $OutputObject = [PSCustomObject]@{
-            error = $StatusCode
-            'Path&Query' = $thisException.Response.ResponseUri.PathAndQuery
-            description = $matchCode.Message
-            NexthinkCode = $($NexthinkMsg.code)
-            Errors = $($NexthinkMsg.errors)
+        $statusCode = $_.Exception.Response.statusCode.Value__
+        $errorDetails = $_.ErrorDetails.Message | ConvertFrom-Json
+        $errorCode = $errorDetails.code
+        $errorMessage = $errorDetails.message
+        
+        $lookupType = $Type
+        if ($null -eq $MAIN.ResponseCodes.$Type) {
+            $lookupType = $Type -replace "_.*$"
+        }
+        
+        # Start error message
+        $message = @()
+        switch ($statusCode) {
+            400 {
+                $message += "Bad request(400) - Invalid request"
+                $message += ''
+                if ($null -eq $errorCode -and $errorDetails.status -eq "error") {
+                    $message += "Many errors presented"
+                    $message += "--> Json list of errors"
+                    $message += ($errrorDetails.errors | ConvertTo-Json -Depth 8 -Compress | out-string)
+                } else {
+                    $message += "--> $errorCode"
+                    $message += "--> $errorMessage"
+                }
+            }
+            401 { 
+                $message += "Unauthorized(401) - No valid authentication credentials."
+                $message += ''
+                $message += '--> Ensure these credentials have access to the requested action'
+                $message += "--> Error Message:"
+                $message += $errorMessage
+            }
+            403 { 
+                $message += "No Permission(403) - No permission to perform requested action."
+                $message += ''
+                $message += "--> Please verify the credentials have access to the $lookupType API"
+                $message += "--> Error Message:"
+                $message += $errorMessage
+            }
+            429 {
+                # Too may requests, pause and repeat?!?
+                $retryAfter = $_.Exception.Response.Headers.'Retry-After'
+                $message += "Slow Down!!, Speed Racer."
+                $message += ''
+                $message += "Retry After $retryAfter"
+                #When throttling occurs, the API returns the HTTP status code 429, and the requests fail. 
+                #It is best practice to catch 429 responses in your code and retry the request after a suitable waiting period.
+                #Refer to the value specified in the Retry-After header from the response.
+            }
+            Default {
+                $responseCodes = $MAIN.ResponseCodes.$lookupType
+                $matchedCode = $responseCodes | where-Object {$_.Code -eq $statusCode}
+                if ($null -ne $matchedCode) {
+                    $message += $matchedCode.Status
+                    $message += $matchedCode.message
+                    if ($null -ne $matchedCode.keys) {
+                        $matchedKeys = $($matchedCode.keys).split(',')
+                        foreach ($key in $matchedKeys) {
+                            $subMessage = $errorMessage.$key
+                            if ($subMessage.gettype().Name -ne "String") {
+                                $subMessage = $errorMessage.$key | ConvertTo-Json -compress
+                            }
+                            $message += "--> $subMessage"
+                        }
+                    }
+                }
+            }
         }
 
-        if ($null -ne $Message -and $null -eq $NexthinkMsg) {
-            $OutputObject.Errors = $Message._embedded.errors.message
-        } 
-        Write-CustomLog -Message $($OutputObject) -Severity 'ERROR'
-        throw $OutputObject
+        Write-Error -message ($message | out-string) -ErrorId $errorCode
+        Write-CustomLog -Message ($message | out-string) -Severity 'ERROR'
+        throw $errorCode
     } catch {
         throw $_
     }

@@ -1,43 +1,42 @@
 ﻿{
     "ResponseCodes": {
-        "Campaign": [
-            {
-                "Code": 200,
-                "Status": "OK",
-                "Message": "Successful triggering"
-            },
-            {
-                "Code": 400,
-                "Status": "Bad request",
-                "Message": "Invalid enrichment, see error codes for details"
-            },            
-            {
-                "Code": 401,
-                "Status": "Unauthorized",
-                "Message": "No valid authentication credentials."
-            }
-        ],
         "Enrich": [
             {
-                "Code": 200,
-                "Status": "OK",
-                "Message": "Successful triggering"
+                "Code": 207,
+                "Status": "Partial success enrichment response",
+                "Message": "Some invalid enrichment, see error codes for details",
+                "keys": "status,errors"
             },
             {
                 "Code": 400,
                 "Status": "Bad request",
-                "Message": "Invalid request, see the error code for details"
-            },            
+                "Message": "Invalid enrichment, see error codes for details",
+                "keys": "status,errors"
+            }
+        ],
+        "NQL": [
             {
-                "Code": 401,
-                "Status": "Unauthorized",
-                "Message": "No valid authentication credentials."
+                "Code": 404,
+                "Status": "Query not found",
+                "Message": "Given queryId doesn't exist"
+            },
+            {
+                "Code": 500,
+                "Status": "Internal server error",
+                "Message": "Internal server error",
+                "keys": "message,code,source"
+            },
+            {
+                "Code": 503,
+                "Status": "Internal error",
+                "Message": "Internal error"
             }
         ]
     },
 
     "APIs": {
         "BASE": "/api/v1",
+        "DETAILS": "/details?nql-id=",
         "OAUTH": {
             "Method": "POST",
             "uri": "/token"
@@ -54,12 +53,24 @@
             "Method": "GET",
             "uri": "/act/remote-action"
         },
-        "RA_Details": {
-            "uri": "/details?nql-id="
-        },
         "Enrich": {
             "Method": "POST",
-            "uri": "/enrichment/data/fields"
+            "uri": "/enrichment/data/fields",
+            "Headers" : {
+                "x-enrichment-trace-id": "([guid]::NewGuid()).Guid"
+            }
+        },
+        "NQL": {
+            "Method": "POST",
+            "uri": "/nql/execute"
+        },
+        "WF_Exec": {
+            "Method": "POST",
+            "uri": "/workflow/execute"
+        },
+        "WF_List": {
+            "Method": "GET",
+            "uri": "/workflow/workflow"
         }
     },
 

@@ -27,8 +27,8 @@
                 
         [ValidateScript({($_ -ge 1) -and 
                          ($_ -le 525600)})]
-        [Alias('expiresInMinutes')]
-        [Int]$Expires = 60
+        [Alias('Expires')]
+        [Int]$expiresInMinutes = 60
     )
     $ApiType = 'Campaign'
 
@@ -44,7 +44,7 @@
     $body = @{
         campaignNqlId = $CampaignId
         userSid = $Users
-        expiresInMinutes = $Expires
+        expiresInMinutes = $expiresInMinutes
     }
     
     $bodyJson = $body | ConvertTo-Json -Depth 4

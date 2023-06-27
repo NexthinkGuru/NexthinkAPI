@@ -1,10 +1,10 @@
 ﻿# Sample data
 
 # Requires -Module NexthinkApi
-#Import-Module ".\NexthinkAPI\NexthinkApi.psm1"
+Import-Module ".\NexthinkAPI\NexthinkApi.psm1"
 
 # Will read in the Configuration file (optionally passed or default config.json) and get a Token for API Calls
-Initialize-NexthinkAPI -Config ".\NexthinkAPI\Sample\config.json"
+Initialize-NexthinkAPI -Config ".\Sample\config.json"
 
 # # Shows the configuration data used in the API Calls Used to validate the config
 Get-ApiConfig
@@ -16,8 +16,8 @@ $fieldName  = 'device.#biosUpToDate'    # The name of the field we need to enric
 $objectName = 'device.name'             # The name of the field to be used to ID the object
 
 $objectValueMap = @{                   # hashtable of data values.
-    'SENATORMARC' = 'duh3'
-    'RAGH-BOX' = "Nope3"
+    'SENATORMARC' = 'duh4'
+    'RAGH-BOX2' = "Nope3"
 }
 
 # Create the enrichment variable to send to the enricher
@@ -33,7 +33,7 @@ Invoke-EnrichmentRequest -Enrichment $mySingleFieldEnrichment
 $remoteActionList = Invoke-ListRemoteActions
 
 # Setup for calling a basic RA.
-$remoteActionId = 'get_chrome_plugins'
+$remoteActionId = '#migration2'
 
 # Get the details of a single RA
 $remoteActionDetails = Invoke-ListRemoteActions -remoteActionId $remoteActionId
@@ -53,7 +53,8 @@ $deviceIdList = @($collectorUID)
 #     param2 = 'doh'
 # }
 
-Invoke-RemoteAction -remoteActionId $remoteActionId -deviceIdList $deviceIdList
+Invoke-RemoteAction -remoteActionId $remoteActionId -deviceIdList $deviceIdList -expiresInMinutes 10080
+
 
 # # # 
 # Campaign API
@@ -61,3 +62,12 @@ Invoke-RemoteAction -remoteActionId $remoteActionId -deviceIdList $deviceIdList
 $CampaignNQLId = "#pg_sample_test"
 $UserSIDs = @('S-1-5-21-3214108409-1210251088-3580824686-1001')
 Invoke-Campaign -CampaignId $CampaignNQLId -Users $UserSIDs -Expires 60
+
+
+
+# # #
+# NQL API
+#
+$queryId = '#d_detail'
+$params = @{ device_name = 'RAGH-BOX'}
+Invoke-NqlQuery -QueryId $queryId -Verbose

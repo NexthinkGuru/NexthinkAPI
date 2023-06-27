@@ -29,13 +29,25 @@
     $baseHeaders.Add("Content-Type", "application/json")
     $baseHeaders.Add("Accept", "application/json")
     $baseHeaders.Add("Authorization", "")
-    $baseHeaders.Add("x-enrichment-trace-id", "0")
-    $baseHeaders.Add("nx-source", $null)
+    # $baseHeaders.Add("nx-source", $null)
     
     # Retrieve the configuration json file
     New-Variable -Name CONFIG -Scope Script -Value $(Get-Content $Path | ConvertFrom-Json) -Force
     New-Variable -Name BASE_API -Option ReadOnly -Scope Script -Force -Value @{BASE = '';headers = $baseHeaders;expires = [DateTime]0}
     Add-Member -InputObject $CONFIG -MemberType NoteProperty -name _API -Value $BASE_API -ErrorAction SilentlyContinue
+
+    # Validate configuration
+    $errorMessage = @()
+    if ($null -eq $CONFIG.NexthinkAPI) {
+        $errorMessage += "Please ensure NexthinkAPI configuration is available in config file"
+    } else {
+        if ($null -eq $CONFIG.NexthinkAPI.InstanceName) { $errorMessage += "Missing InstanceName in NexthinkAPI configuration"}
+        if ($null -eq $CONFIG.NexthinkAPI.Region) { $errorMessage += "Missing Region in NexthinkAPI configuration"}
+        if ($null -eq $CONFIG.NexthinkAPI.OAuthCredentialEntry) { $errorMessage += "Missing OAuthCredentialEntry Name in NexthinkAPI configuration"}
+    }
+    if ($errorMessage.Length -gt 0) {
+        Throw $errorMessage
+    }
 
     # Base URL for Infinity API Calls
     $CONFIG._API.BASE = "https://{0}.api.{1}.nexthink.cloud{2}" -f $CONFIG.NexthinkAPI.InstanceName, $CONFIG.NexthinkAPI.Region, $MAIN.APIs.BASE
@@ -44,6 +56,6 @@
     # Start the logger
     Initialize-Logger
 
-    # Check and get the new Jwt if needed
-    Set-Jwt
+    # Ensure we have a JWT that's valid with headers set
+    Set-Headers
 }

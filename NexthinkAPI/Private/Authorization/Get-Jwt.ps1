@@ -15,11 +15,12 @@
     param ()
 
     $uri = $CONFIG._API.BASE + $MAIN.APIs.OAUTH.uri
+    Write-CustomLog -Message "Uri for JWT: $uri" -Severity "DEBUG"
 
     # Invoke-WebRequests usually displays a progress bar. The $ProgressPreference variable determines whether this is displayed (default value = Continue)
-    $ProgressPreference = 'SilentlyContinue'  
+    $ProgressPreference = 'SilentlyContinue'
     try {
-        Write-CustomLog "Getting Credentials for $($CONFIG.NexthinkAPI.OAuthCredentialEntry) " -Severity "DEBUG"
+        Write-CustomLog "Credential Target: $($CONFIG.NexthinkAPI.OAuthCredentialEntry)" -Severity "DEBUG"
         $credentials = Get-ClientCredentials -Target $CONFIG.NexthinkAPI.OAuthCredentialEntry
 
         $basicHeader = Get-StringAsBase64 -InputString "$($credentials.clientId):$($credentials.clientSecret)"
@@ -27,9 +28,11 @@
         $headers.Authorization = "Basic " + $basicHeader
 
         $response = Invoke-WebRequest -Uri $uri -Method 'POST' -Headers $headers -UseBasicParsing
+        
         if ($response.StatusCode -ne '200') {
-            $message = "Error sending request to get the JWT token with status code: $($response.StatusCode)"
-            Write-CustomLog -Message Write-CustomLog -Message "Unable to access $($uri) Endpoint. Details: $($_.Exception.Message)" -Severity 'ERROR' -Severity 'ERROR'
+            Write-Warning "Error Code: $($response.StatusCode)"
+            $message = "Error Code: $($response.StatusCode).  Unable to access $($uri) Endpoint. Details: $($_.Exception.Message)"
+            Write-CustomLog -Message $message -Severity 'ERROR'
             throw $message
         }
 
