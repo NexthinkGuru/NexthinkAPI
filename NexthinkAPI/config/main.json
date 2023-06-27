@@ -1,24 +1,5 @@
 ﻿{
     "ResponseCodes": {
-        "Campaign": [
-            {
-                "Code": 200,
-                "Status": "OK",
-                "Message": "Successful triggering"
-            },
-            {
-                "Code": 400,
-                "Status": "Bad request",
-                "Message": "Invalid enrichment, see error codes for details",
-                "keys": "code,message"
-            },            
-            {
-                "Code": 401,
-                "Status": "Unauthorized",
-                "Message": "No valid authentication credentials.",
-                "keys": "code,message"
-            }
-        ],
         "Enrich": [
             {
                 "Code": 207,
@@ -31,67 +12,9 @@
                 "Status": "Bad request",
                 "Message": "Invalid enrichment, see error codes for details",
                 "keys": "status,errors"
-            },            
-            {
-                "Code": 401,
-                "Status": "Unauthorized",
-                "Message": "No valid authentication credentials."
-            },            
-            {
-                "Code": 403,
-                "Status": "No Permission",
-                "Message": "No permission to trigger enrichment",
-                "keys": "message"
-            }
-        ],
-        "RA_List": [
-            {
-                "Code": 400,
-                "Status": "Bad request",
-                "Message": "Invalid request, see error code for details"
-            },   
-            {
-                "Code": 401,
-                "Status": "Unauthorized",
-                "Message": "No valid authentication credentials."
-            },
-            {
-                "Code": 403,
-                "Status": "No Permission",
-                "Message": "No permission to get remote action(s)",
-                "keys": "message"
-            }
-        ],
-        "RA": [
-            {
-                "Code": 400,
-                "Status": "Bad request",
-                "Message": "Invalid request, see error code for details"
-            },   
-            {
-                "Code": 401,
-                "Status": "Unauthorized",
-                "Message": "No valid authentication credentials."
-            },
-            {
-                "Code": 403,
-                "Status": "No Permission",
-                "Message": "No permission to execute remote action",
-                "keys": "message"
             }
         ],
         "NQL": [
-            {
-                "Code": 400,
-                "Status": "Bad request",
-                "Message": "Invalid request, see the error code for details"
-            },            
-            {
-                "Code": 403,
-                "Status": "Unauthorized",
-                "Message": "No permission to execute queries",
-                "keys": "message,code,source"
-            },
             {
                 "Code": 404,
                 "Status": "Query not found",
@@ -107,23 +30,6 @@
                 "Code": 503,
                 "Status": "Internal error",
                 "Message": "Internal error"
-            }
-        ],
-        "WF": [
-            {
-                "Code": 400,
-                "Status": "Bad request",
-                "Message": "Invalid request, see error code for details"
-            },   
-            {
-                "Code": 401,
-                "Status": "Unauthorized",
-                "Message": "No valid authentication credentials."
-            },   
-            {
-                "Code": 403,
-                "Status": "No Permission",
-                "Message": "No permission to execute workflow"
             }
         ]
     },
@@ -156,7 +62,7 @@
         },
         "NQL": {
             "Method": "POST",
-            "uri": "/execute"
+            "uri": "/nql/execute"
         },
         "WF_Exec": {
             "Method": "POST",

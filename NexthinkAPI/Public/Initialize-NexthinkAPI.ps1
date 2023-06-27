@@ -36,6 +36,19 @@
     New-Variable -Name BASE_API -Option ReadOnly -Scope Script -Force -Value @{BASE = '';headers = $baseHeaders;expires = [DateTime]0}
     Add-Member -InputObject $CONFIG -MemberType NoteProperty -name _API -Value $BASE_API -ErrorAction SilentlyContinue
 
+    # Validate configuration
+    $errorMessage = @()
+    if ($null -eq $CONFIG.NexthinkAPI) {
+        $errorMessage += "Please ensure NexthinkAPI configuration is available in config file"
+    } else {
+        if ($null -eq $CONFIG.NexthinkAPI.InstanceName) { $errorMessage += "Missing InstanceName in NexthinkAPI configuration"}
+        if ($null -eq $CONFIG.NexthinkAPI.Region) { $errorMessage += "Missing Region in NexthinkAPI configuration"}
+        if ($null -eq $CONFIG.NexthinkAPI.OAuthCredentialEntry) { $errorMessage += "Missing OAuthCredentialEntry Name in NexthinkAPI configuration"}
+    }
+    if ($errorMessage.Length -gt 0) {
+        Throw $errorMessage
+    }
+
     # Base URL for Infinity API Calls
     $CONFIG._API.BASE = "https://{0}.api.{1}.nexthink.cloud{2}" -f $CONFIG.NexthinkAPI.InstanceName, $CONFIG.NexthinkAPI.Region, $MAIN.APIs.BASE
     Write-CustomLog -Message "Base URL: $($CONFIG._API.BASE)" -Severity 'DEBUG'

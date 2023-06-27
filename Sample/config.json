@@ -14,7 +14,14 @@
     "NexthinkAPI": {
         "InstanceName": "psna",
         "Region": "eu.pre",
-        "OAuthCredentialEntry": "psna-test-1",
+        "__OAuthCredentialEntry": "psna-test-1",
+        "OAuthCredentialEntry": "psna_nqltest-1",
+        "RequestBatchSize": 1000
+    },
+    "NexthinkAPISandbox": {
+        "InstanceName": "sandbox-06",
+        "Region": "eu.pre",
+        "OAuthCredentialEntry": "sb06-1",
         "RequestBatchSize": 1000
     }
 }

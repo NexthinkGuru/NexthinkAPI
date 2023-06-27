@@ -33,7 +33,7 @@ Invoke-EnrichmentRequest -Enrichment $mySingleFieldEnrichment
 $remoteActionList = Invoke-ListRemoteActions
 
 # Setup for calling a basic RA.
-$remoteActionId = 'get_chrome_plugins'
+$remoteActionId = '#migration2'
 
 # Get the details of a single RA
 $remoteActionDetails = Invoke-ListRemoteActions -remoteActionId $remoteActionId
@@ -53,7 +53,8 @@ $deviceIdList = @($collectorUID)
 #     param2 = 'doh'
 # }
 
-Invoke-RemoteAction -remoteActionId $remoteActionId -deviceIdList $deviceIdList
+Invoke-RemoteAction -remoteActionId $remoteActionId -deviceIdList $deviceIdList -expiresInMinutes 10080
+
 
 # # # 
 # Campaign API
@@ -61,3 +62,12 @@ Invoke-RemoteAction -remoteActionId $remoteActionId -deviceIdList $deviceIdList
 $CampaignNQLId = "#pg_sample_test"
 $UserSIDs = @('S-1-5-21-3214108409-1210251088-3580824686-1001')
 Invoke-Campaign -CampaignId $CampaignNQLId -Users $UserSIDs -Expires 60
+
+
+
+# # #
+# NQL API
+#
+$queryId = '#d_detail'
+$params = @{ device_name = 'RAGH-BOX'}
+Invoke-NqlQuery -QueryId $queryId -Verbose
