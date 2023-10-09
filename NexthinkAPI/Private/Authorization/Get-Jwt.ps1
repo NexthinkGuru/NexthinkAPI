@@ -14,20 +14,22 @@
     [CmdletBinding()]
     param ()
 
-    $uri = $CONFIG._API.BASE + $MAIN.APIs.OAUTH.uri
+    $uri = $Config._API.BASE + $MAIN.APIs.OAUTH.uri
     Write-CustomLog -Message "Uri for JWT: $uri" -Severity "DEBUG"
 
     # Invoke-WebRequests usually displays a progress bar. The $ProgressPreference variable determines whether this is displayed (default value = Continue)
     $ProgressPreference = 'SilentlyContinue'
     try {
-        Write-CustomLog "Credential Target: $($CONFIG.NexthinkAPI.OAuthCredentialEntry)" -Severity "DEBUG"
-        $credentials = Get-ClientCredentials -Target $CONFIG.NexthinkAPI.OAuthCredentialEntry
+        Write-CustomLog "Credential Target: $($Config.NexthinkAPI.OAuthCredentialEntry)" -Severity "DEBUG"
+        $credentials = Get-ClientCredentials -Target $Config.NexthinkAPI.OAuthCredentialEntry
 
         $basicHeader = Get-StringAsBase64 -InputString "$($credentials.clientId):$($credentials.clientSecret)"
         $headers = $BASE_API.headers
         $headers.Authorization = "Basic " + $basicHeader
 
         $response = Invoke-WebRequest -Uri $uri -Method 'POST' -Headers $headers -UseBasicParsing
+
+        Remove-Variable credentials,basicHeader -Force -ErrorAction SilentlyContinue
         
         if ($response.StatusCode -ne '200') {
             Write-Warning "Error Code: $($response.StatusCode)"

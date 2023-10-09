@@ -18,7 +18,8 @@
 
     # Check for config file
     if (! (Test-Path $Path)) {
-        Throw "Unable to locate config file: $Path"
+        Write-Error "Unable to locate config file: $Path"
+        break
     }
 
     # Forcing Tls1.2 to avoid SSL failures
@@ -34,27 +35,28 @@
     # Retrieve the configuration json file
     New-Variable -Name CONFIG -Scope Script -Value $(Get-Content $Path | ConvertFrom-Json) -Force
     New-Variable -Name BASE_API -Option ReadOnly -Scope Script -Force -Value @{BASE = '';headers = $baseHeaders;expires = [DateTime]0}
-    Add-Member -InputObject $CONFIG -MemberType NoteProperty -name _API -Value $BASE_API -ErrorAction SilentlyContinue
+    Add-Member -InputObject $Config -MemberType NoteProperty -name _API -Value $BASE_API -ErrorAction SilentlyContinue
 
     # Validate configuration
     $errorMessage = @()
-    if ($null -eq $CONFIG.NexthinkAPI) {
+    if ($null -eq $Config.NexthinkAPI) {
         $errorMessage += "Please ensure NexthinkAPI configuration is available in config file"
     } else {
-        if ($null -eq $CONFIG.NexthinkAPI.InstanceName) { $errorMessage += "Missing InstanceName in NexthinkAPI configuration"}
-        if ($null -eq $CONFIG.NexthinkAPI.Region) { $errorMessage += "Missing Region in NexthinkAPI configuration"}
-        if ($null -eq $CONFIG.NexthinkAPI.OAuthCredentialEntry) { $errorMessage += "Missing OAuthCredentialEntry Name in NexthinkAPI configuration"}
+        if ($null -eq $Config.NexthinkAPI.InstanceName) { $errorMessage += "Missing InstanceName in NexthinkAPI configuration"}
+        if ($null -eq $Config.NexthinkAPI.Region) { $errorMessage += "Missing Region in NexthinkAPI configuration"}
+        if ($null -eq $Config.NexthinkAPI.OAuthCredentialEntry) { $errorMessage += "Missing OAuthCredentialEntry Name in NexthinkAPI configuration"}
     }
     if ($errorMessage.Length -gt 0) {
-        Throw $errorMessage
+        Write-Host $errorMessage -ForegroundColor Red
+        break
     }
 
-    # Base URL for Infinity API Calls
-    $CONFIG._API.BASE = "https://{0}.api.{1}.nexthink.cloud{2}" -f $CONFIG.NexthinkAPI.InstanceName, $CONFIG.NexthinkAPI.Region, $MAIN.APIs.BASE
-    Write-CustomLog -Message "Base URL: $($CONFIG._API.BASE)" -Severity 'DEBUG'
-    
     # Start the logger
     Initialize-Logger
+
+    # Base URL for Infinity API Calls
+    $Config._API.BASE = "https://{0}.api.{1}.nexthink.cloud{2}" -f $Config.NexthinkAPI.InstanceName, $Config.NexthinkAPI.Region, $MAIN.APIs.BASE
+    Write-CustomLog -Message "Base URL: $($Config._API.BASE)" -Severity 'DEBUG'
 
     # Ensure we have a JWT that's valid with headers set
     Set-Headers

@@ -66,11 +66,11 @@
         },
         "WF_Exec": {
             "Method": "POST",
-            "uri": "/workflow/execute"
+            "uri": "/workflows/execute"
         },
         "WF_List": {
             "Method": "GET",
-            "uri": "/workflow/workflow"
+            "uri": "/workflows"
         }
     },
 

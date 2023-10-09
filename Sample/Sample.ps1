@@ -1,7 +1,6 @@
 ﻿# Sample data
 
 # Requires -Module NexthinkApi
-Import-Module ".\NexthinkAPI\NexthinkApi.psm1"
 
 # Will read in the Configuration file (optionally passed or default config.json) and get a Token for API Calls
 Initialize-NexthinkAPI -Config ".\Sample\config.json"
@@ -55,7 +54,6 @@ $deviceIdList = @($collectorUID)
 
 Invoke-RemoteAction -remoteActionId $remoteActionId -deviceIdList $deviceIdList -expiresInMinutes 10080
 
-
 # # # 
 # Campaign API
 #
@@ -63,11 +61,20 @@ $CampaignNQLId = "#pg_sample_test"
 $UserSIDs = @('S-1-5-21-3214108409-1210251088-3580824686-1001')
 Invoke-Campaign -CampaignId $CampaignNQLId -Users $UserSIDs -Expires 60
 
+# # #
+# NQL API
+#
+#$params = @{ device_name = 'RAGH-BOX'}
+$queryId = '#a_simple_test'
+Invoke-NqlQuery -QueryId $queryId #  -Verbose
 
 
 # # #
 # NQL API
 #
-$queryId = '#d_detail'
-$params = @{ device_name = 'RAGH-BOX'}
-Invoke-NqlQuery -QueryId $queryId -Verbose
+#$params = @{ device_name = 'RAGH-BOX'}
+$queryId = '#a_simple_test'
+Invoke-NqlQuery -QueryId $queryId #  -Verbose
+
+
+

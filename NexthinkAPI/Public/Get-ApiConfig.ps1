@@ -1,8 +1,8 @@
 ﻿function Get-ApiConfig {
     [CmdletBinding()]
     param ()
-    if ($CONFIG._API) {
-        $CONFIG._API
+    if ($Config._API) {
+        $Config._API
     } else {
         Write-Warning "No Config - Initialize the NexthinkAPI."
     }

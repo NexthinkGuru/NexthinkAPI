@@ -8,13 +8,13 @@ This Powershell Module provides a serices of cmdlets for interacting with the Ne
 
 Requires PowerShell 5.1 or above.
 
-Requires PowerShell Module Credential Manager [PowerShell Gallery](https://www.powershellgallery.com/packages/CredentialManager/2.0) with `Install-Module CredentialManager`.
+Requires PowerShell Module Credential Manager [PowerShell Gallery](https://www.powershellgallery.com/packages/CredentialManager/2.0) with `Install-Module CredentialManager -Scope CurrentUser`.
 
-Requires PowerShell Module Logging [PowerShell Gallery](https://www.powershellgallery.com/packages/Logging/4.8.5) with `Install-Module Logging`.
+Requires PowerShell Module Logging [PowerShell Gallery](https://www.powershellgallery.com/packages/Logging/4.8.5) with `Install-Module Logging -Scope CurrentUser`.
 
 ## Installation
 
-The NexthinkAPI module can be easily be installed from the [PowerShell Gallery](https://www.powershellgallery.com/packages/NexthinkAPI) with `Install-Module NexthinkAPI`.
+The NexthinkAPI module can be easily be installed from the [PowerShell Gallery](https://www.powershellgallery.com/packages/NexthinkAPI) with `Install-Module NexthinkAPI -Scope CurrentUser`.
 
 ## Session Management/Authentication
 
@@ -60,11 +60,11 @@ In the newly opened PowerShell window, add the API credentials you just created 
   Loads the configuration file, retrieves the secure credentials and obtains a Token for API Calls
   
 ```PowerShell
-# Assuming a config.json file is in the same directory
+# Assumes a config.json configuration file is in the current directory
 Initialize-NexthinkAPI
 
-# Passing a specific configuration file
-Initialize-NexthinkAPI -Path .\config\my_custom.json 
+# Passing a specific configuration file - Useful for different instances
+Initialize-NexthinkAPI -Path .\config\dev_instance.json 
 
 ```
   
@@ -133,6 +133,24 @@ Invoke-Campaign -CampaignId $myCampaignNqlId -Users $UserSIDList
 
 # Set your own timeout by adding an additional parameter (in minutes) <Min 1 / Max 525600>
 Invoke-Campaign -CampaignId $myCampaignNqlId -Users $UserSIDList -Expires 10800
+```
+
+## NQL
+
+``` Powershell
+# Set the NQL ID of the query
+$queryId = '#a_simple_test'
+
+# Make the api call
+Invoke-NqlQuery -QueryId $queryId
+
+# Some NQL may have parameters
+$params = @{ 
+  device_name = 'RAGH-BOX'
+}
+Invoke-NqlQuery -QueryId "#my_nql_query_id" -params $param
+
+
 ```
 
 ## Authors

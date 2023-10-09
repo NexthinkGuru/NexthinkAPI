@@ -3,8 +3,7 @@ param()
 
 Write-Verbose $PSScriptRoot
 
-# Requires -Module Logging
-# Requires -Module CredentialManager
+$moduleName = 'NexthinkAPI'
 $modules = 'Logging', 'CredentialManager'
 $installed = @((Get-Module $modules -ListAvailable).Name | Select-Object -Unique)
 $notInstalled = Compare-Object $modules $installed -PassThru
@@ -24,19 +23,36 @@ if ($notInstalled) {
   Install-Module -Scope CurrentUser $notInstalled
 }
 
+# # Check for updates to the module 'MyModule'
+# $currentVersion = Get-Module -Name $moduleName | Select-Object Version
+# $latestVersion = Find-Module -Name $moduleName -Repository PSGallery| Select-Object Version
+
+# # Compare the two versions
+# if ($currentVersion.Version -lt $latestVersion.Version) {
+#     # The module needs to be updated
+#     Write-Host -NoNewline "The module "
+#     Write-Host -NoNewline "'$($moduleName)'" -ForegroundColor Blue  
+#     Write-Host -NoNewline " is out of date! The latest version is "
+#     Write-Host -NoNewline "'$($latestVersion.Version)'." -ForegroundColor Green
+#     Write-Host "Please update before running again to avoid any issues."
+#     Write-Host -NoNewline "   Example: "
+#     Write-Host "Update-Module $($moduleName) -Scope CurrentUser" -ForegroundColor Red
+# }
+
+
 # Load in configuration
 $MAIN = ConvertFrom-Json (Get-Content "$PSScriptRoot\config\main.json" -Raw)
 Set-Variable -Name MAIN -Option ReadOnly -Scope Script -Force
 Export-ModuleMember -Variable MAIN
 
-foreach ($Folder in @('Private', 'Public')) {
-    $Root = Join-Path -Path $PSScriptRoot -ChildPath $Folder
-    if (Test-Path -Path $Root) {
-        Write-Verbose "processing folder $Root"
-        $Files = Get-ChildItem -Path $Root -Filter *.ps1 -Recurse
+foreach ($folder in @('Private', 'Public')) {
+    $root = Join-Path -Path $PSScriptRoot -ChildPath $folder
+    if (Test-Path -Path $root) {
+        Write-Verbose "processing folder $root"
+        $files = Get-ChildItem -Path $root -Filter *.ps1 -Recurse
 
         # dot source each file
-        $Files | Where-Object { $_.name -NotLike '*.Tests.ps1' } |
+        $files | Where-Object { $_.name -NotLike '*.Tests.ps1' } |
         ForEach-Object { Write-Verbose $_.basename; . $PSItem.FullName }
     }
 }

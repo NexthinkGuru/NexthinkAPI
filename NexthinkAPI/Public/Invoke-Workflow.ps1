@@ -29,7 +29,7 @@
         # A key value hashtable of parameters for the automation
         [hashtable]$Parameters
     )
-    $ApiType = 'WF_Exec'
+    $APITYPE = 'WF_Exec'
     
     $body = @{
         workflowId = $workflowId
@@ -43,5 +43,5 @@
 
     $bodyJson = $body | ConvertTo-Json -Depth 4
 
-    Invoke-NxtApi -Type $ApiType -Body $bodyJson -ReturnResponse
+    Invoke-NxtApi -Type $APITYPE -Body $bodyJson -ReturnResponse
 }

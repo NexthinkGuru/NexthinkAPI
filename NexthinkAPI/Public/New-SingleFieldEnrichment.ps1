@@ -18,24 +18,24 @@
     )
     $enrichments = [System.Collections.ArrayList]::new()
 
-    $FieldId = Get-FieldID -Name $fieldName
+    $fieldId = Get-FieldID -Name $fieldName
 
-    $ObjectId = $MAIN.EnrichmentIDMap.$ObjectName
-    if ($null -eq $ObjectId) {
+    $objectId = $MAIN.EnrichmentIDMap.$ObjectName
+    if ($null -eq $objectId) {
         $message = "Invalid Object Selection: $ObjectName"
         Write-CustomLog $message -Severity "ERROR"
         throw $message
     }
     
-    Write-CustomLog -Message "Enriching Field $FieldId of $ObjectId " -Severity "DEBUG"
+    Write-CustomLog -Message "Enriching Field $fieldId of $objectId " -Severity "DEBUG"
     foreach ($Object in $ObjectValues.Keys) {
         Write-CustomLog -Message "Adding ${Object}:$($ObjectValues.$Object)" -Severity "DEBUG"
         $identification = [PSCustomObject]@{
-            name = $ObjectId
+            name = $objectId
             value = $Object
         }
         $fields = [PSCustomObject]@{
-            name = $FieldId
+            name = $fieldId
             value = $ObjectValues.$Object
         }
         $enrichments.Add([PSCustomObject]@{

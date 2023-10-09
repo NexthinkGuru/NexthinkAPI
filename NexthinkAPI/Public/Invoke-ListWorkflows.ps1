@@ -16,25 +16,27 @@
     param(
         [parameter(Mandatory=$false)]
         [Alias('nqlId')]
-        [string]$workflowId
+        [string]$WorkflowId
     )
-    $ApiType = 'WF_List'
+    $APITYPE = 'WF_List'
 
     $query = $null
 
-    if ($null -ne $workflowId -and '' -ne $workflowId) {
-        $workflowIdEncoded = [System.Web.HttpUtility]::UrlEncode($workflowId)
-        $query = -join ($MAIN.APIs.DETAILS.uri,$workflowIdEncoded)
+    if ($null -ne $WorkflowId -and '' -ne $WorkflowId) {
+        $workflowIdEncoded = [System.Web.HttpUtility]::UrlEncode($WorkflowId)
+        $query = -join ($MAIN.APIs.DETAILS,$workflowIdEncoded)
         Write-Verbose "Query: $query"
+    } else {  # Added to address Pre-release version of Workflow API's
+        $query = "/workflows"
     }
 
-    $workflowList = Invoke-NxtApi -Type $ApiType -Query $query -ReturnResponse
+    $workflowList = Invoke-NxtApi -Type $APITYPE -Query $query -ReturnResponse
  
     # Process through the responses, only returning the ones we want.
     if ($null -ne $workflowList) {
-        foreach ($WF in $workflowList) {
-            if ($WF.triggerMethods.apiEnabled) { 
-                $WF
+        foreach ($workflow in $workflowList) {
+            if ($workflow.triggerMethods.apiEnabled) { 
+                $workflow
             }
         } 
     } else {
