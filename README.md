@@ -150,6 +150,9 @@ $params = @{
 }
 Invoke-NqlQuery -QueryId "#my_nql_query_id" -params $param
 
+# Many times we want just the data in a nice powershell object vs the Array we get from the raw API
+# In that case, just put the Data Only flag on the query.  This works with parameters or not.
+Invoke-NqlQuery -QueryId $queryId -DataOnly
 
 ```
 
