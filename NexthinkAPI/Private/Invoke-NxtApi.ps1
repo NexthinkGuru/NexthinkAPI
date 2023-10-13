@@ -10,7 +10,7 @@
         [switch]$ReturnResponse
     )
 
-    $uri = $CONFIG._API.BASE + $MAIN.APIs.$Type.uri + $Query
+    $uri = $Config._API.BASE + $MAIN.APIs.$Type.uri + $Query
 
     $method = $MAIN.APIs.$Type.Method
 
@@ -21,7 +21,7 @@
     $invokeParams = @{
         Uri = $uri
         Method = $method
-        Headers = $CONFIG._API.headers
+        Headers = $Config._API.headers
         ContentType = 'application/json'
     }
     $msg = "Invoke Web Request Params: `n$($invokeParams.GetEnumerator() | ForEach-Object { "{0}:{1}" -f $_.key, ($_.value | Out-String) })"
@@ -49,7 +49,7 @@
         $errorDetails = $_.ErrorDetails.Message | ConvertFrom-Json
         $errorCode = $errorDetails.code
         $errorMessage = $errorDetails.message
-        
+
         $lookupType = $Type
         if ($null -eq $MAIN.ResponseCodes.$Type) {
             $lookupType = $Type -replace "_.*$"
@@ -67,22 +67,23 @@
                     $message += ($errrorDetails.errors | ConvertTo-Json -Depth 8 -Compress | out-string)
                 } else {
                     $message += "--> $errorCode"
-                    $message += "--> $errorMessage"
                 }
             }
             401 { 
                 $message += "Unauthorized(401) - No valid authentication credentials."
                 $message += ''
                 $message += '--> Ensure these credentials have access to the requested action'
-                $message += "--> Error Message:"
-                $message += $errorMessage
             }
             403 { 
                 $message += "No Permission(403) - No permission to perform requested action."
                 $message += ''
                 $message += "--> Please verify the credentials have access to the $lookupType API"
-                $message += "--> Error Message:"
-                $message += $errorMessage
+            }
+            404 {
+                $message += "Page Not Found (404)"
+                $message += ''
+                $message += "--> The URI, $uri, doesn't work."
+                $message += "--> Either the instance, api's, or this module has a defect"
             }
             429 {
                 # Too may requests, pause and repeat?!?
@@ -110,13 +111,19 @@
                             $message += "--> $subMessage"
                         }
                     }
+                } else {
+                    $message += "Error: $errorCode"
                 }
             }
         }
+        
+        $message += "--> Error Message:"
+        $message += "Message: $errorMessage"
 
         Write-Error -message ($message | out-string) -ErrorId $errorCode
         Write-CustomLog -Message ($message | out-string) -Severity 'ERROR'
-        throw $errorCode
+        
+        throw $($errorCode -as [int])
     } catch {
         throw $_
     }

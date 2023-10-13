@@ -5,13 +5,15 @@
     .DESCRIPTION
         Triggers the execution of Remote Actions for 1 or more devivces
     .INPUTS
-        RA ID
-        List of device UID's
-        Optional RA Parameters
-        expiresInMinutes -         The amount of time in minutes before the execution will expire if a targeted device does not come online to process it.
+        remoteActionId - Remote Actions NQL ID
+        devices - List (Array) of Device Collector UID values
+        parameters - Optional RA Parameters (hashtable)
+        expiresInMinutes - The amount of time in minutes before the execution will expire if a targeted device does not come online to process it.
     .OUTPUTS
         Object. 
     .NOTES
+        2023.09.27: Updated UID validation
+
     #>
     [CmdletBinding()]
     param(
@@ -32,11 +34,11 @@
         # Time to wait for devices execution of RA (60-10080 min)
         [Int]$expiresInMinutes = 60,
                 
-        [parameter(Mandatory=$false)]
         # A key value hashtable of parameters for the RA
+        [parameter(Mandatory=$false)]
         [hashtable]$Parameters
     )
-    $ApiType = 'RA_Exec'
+    $APITYPE = 'RA_Exec'
     
     $body = @{
         remoteActionId = $remoteActionId
@@ -51,5 +53,5 @@
 
     $bodyJson = $body | ConvertTo-Json -Depth 4
 
-    Invoke-NxtApi -Type $ApiType -Body $bodyJson -ReturnResponse
+    Invoke-NxtApi -Type $APITYPE -Body $bodyJson -ReturnResponse
 }

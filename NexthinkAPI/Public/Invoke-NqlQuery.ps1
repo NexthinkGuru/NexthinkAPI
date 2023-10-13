@@ -4,18 +4,22 @@
         Triggers NQL Query creation
     .DESCRIPTION
         Triggers the execution of an NQL query, returning up to 100 results
+    .EXAMPLE
+    PS> [PSCustomObject]$myQueryOutput = Invoke-NqlQuery -QueryId "#my_nql_test_query"
+    .EXAMPLE
+    PS> [PSCustomObject]$myQueryData =nvoke-NqlQuery -QueryId "#my_nql_test_query" -DataOnly
     .INPUTS
         Query ID: An identifier for the query​. Once defined this can no longer be changed.
         Parameters: Optional hashtable of parameters used by the query.
     .OUTPUTS
-        [Hashtable]
+        [PSCustomObject]
             queryId             string          Identifier of the executed query
             executedQuery       string          Final query executed with the parameters replaced
             rows                integer<int64>  Number of rows returned
             executionDateTime   DateTime        Date and time of the execution
             headers             array[string]   Ordered list with the headers of the returned fields
-            data                array[array]    List of row with the data returned by the query execution
-                object  . 
+            data                array[array]    List of row with the data returned by the query execution object
+        
     .NOTES
         Times out after 5 seconds.
         
@@ -36,9 +40,14 @@
         [string]$QueryId,
                 
         [parameter(Mandatory=$false)]
-        [hashtable]$Parameters
+        [hashtable]$Parameters,
+
+        [parameter(Mandatory=$false)]
+        [Alias('d')]
+        [switch]$DataOnly
+
     )
-    $ApiType = 'NQL'
+    $APITYPE = 'NQL'
 
     $body = @{
         queryId = $QueryId
@@ -50,19 +59,21 @@
     }
     $bodyJson = $body | ConvertTo-Json -Depth 4
     
-    $r = Invoke-NxtApi -Type $ApiType -Body $bodyJson -ReturnResponse
+    $ApiResponse = Invoke-NxtApi -Type $APITYPE -Body $bodyJson -ReturnResponse
 
-    # Modify response with proper datetime field for execution
-    if ($r.executionDateTime.Year -ge 2023) {
-        $tmpDT = [String]::Concat($($r.executionDateTime.year), '-',
-                                  $($r.executionDateTime.month), '-',
-                                  $($r.executionDateTime.day), ' ',
-                                  $($r.executionDateTime.hour), ':',
-                                  $($r.executionDateTime.minute), ':',
-                                  $($r.executionDateTime.second))
-        $r.executionDateTime = [datetime]::ParseExact($tmpDT, "yyyy-M-d H:m:s", $null)
+    if ($DataOnly) {
+        return Get-FormattedNqlOutput -Data $ApiResponse
+    } else {
+        # Modify response with proper datetime field for execution
+        if ($ApiResponse.executionDateTime.Year -ge 2023) {
+            $tmpDT = [String]::Concat($($ApiResponse.executionDateTime.year), '-',
+                                      $($ApiResponse.executionDateTime.month), '-',
+                                      $($ApiResponse.executionDateTime.day), ' ',
+                                      $($ApiResponse.executionDateTime.hour), ':',
+                                      $($ApiResponse.executionDateTime.minute), ':',
+                                      $($ApiResponse.executionDateTime.second))
+            $ApiResponse.executionDateTime = [datetime]::ParseExact($tmpDT, "yyyy-M-d H:m:s", $null)
+        }
+        return $ApiResponse
     }
-    
-
-    return $r
 }

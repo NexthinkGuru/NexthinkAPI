@@ -17,10 +17,10 @@
         [Alias('Body')]
         [PSCustomObject]$Enrichment
     )
-    $ApiType = 'Enrich'
+    $APITYPE = 'Enrich'
 
     $bodyJson = $Enrichment | ConvertTo-Json -Depth 8 -Compress
 
-    Invoke-NxtApi -Type $ApiType -Body $bodyJson
+    Invoke-NxtApi -Type $APITYPE -Body $bodyJson
 
 }

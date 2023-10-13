@@ -7,6 +7,10 @@
         Returns an object of RA's enabled for API Consumption
     .INPUTS
         Optional Remote Action ID. This does not accept pipeline input.
+    .LINK
+        https://github.com/NexthinkGuru/NexthinkAPI/blob/main/README.md#remote-actions
+    .LINK
+        https://github.com/NexthinkGuru/NexthinkAPI/blob/main/Public/Invoke-ListRemoteActions.ps1
     .OUTPUTS
         Object.
     .NOTES
@@ -16,9 +20,13 @@
     param(
         [parameter(Mandatory=$false)]
         [Alias('nqlId')]
-        [string]$remoteActionId
+        [string]$remoteActionId,
+
+        [ValidateSet("manual", "scheduled", "api", "all")]
+        [string]$Targeting = "scheduled"
+        
     )
-    $ApiType = 'RA_List'
+    $APITYPE = 'RA_List'
 
     $query = $null
 
@@ -28,7 +36,7 @@
         Write-Verbose "Query: $query"
     }
 
-    $actionList = Invoke-NxtApi -Type $ApiType -Query $query -ReturnResponse
+    $actionList = Invoke-NxtApi -Type $APITYPE -Query $query -ReturnResponse
  
     # Process through the responses, only returning the ones we want.
     if ($null -ne $actionList) {
