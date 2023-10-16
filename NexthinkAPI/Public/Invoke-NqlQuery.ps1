@@ -1,7 +1,7 @@
 ﻿function Invoke-NqlQuery {
     <#
     .SYNOPSIS
-        Triggers NQL Query creation
+        Triggers NQL Query execution
     .DESCRIPTION
         Triggers the execution of an NQL query, returning up to 100 results
     .EXAMPLE

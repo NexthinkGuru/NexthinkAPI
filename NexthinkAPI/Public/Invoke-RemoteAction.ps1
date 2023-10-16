@@ -42,7 +42,7 @@
     
     $body = @{
         remoteActionId = $remoteActionId
-        devices = $deviceIdList
+        devices = $devices
         expiresInMinutes = $expiresInMinutes
     }
 
