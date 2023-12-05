@@ -8,6 +8,7 @@ Changed the NQL query option DataOnly to use new export feature of API
 * More details can be found in the [Nexthink API Documentation](https://developer.nexthink.com/docs/api/nql-api%2Foperations%2Fcreate-a-api-v-1-nql-export)
 
 ### Commits
+* **https://github.com/NexthinkGuru/NexthinkAPI/pull/13/commits/4a9e5178531ec642d8a935aed7f0db8473b32494**
 
 <a id="0.0.5"></a>
 ## 2023-10-16, Version 0.0.5, @NexthinkGuru [YANKED]
