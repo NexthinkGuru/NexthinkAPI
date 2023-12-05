@@ -43,11 +43,12 @@
         [hashtable]$Parameters,
 
         [parameter(Mandatory=$false)]
-        [Alias('d')]
+        [Alias('d, export')]
         [switch]$DataOnly
 
     )
     $APITYPE = 'NQL'
+    if ($DataOnly) { $APITYPE += '_Export' }
 
     $body = @{
         queryId = $QueryId
@@ -62,7 +63,8 @@
     $ApiResponse = Invoke-NxtApi -Type $APITYPE -Body $bodyJson -ReturnResponse
 
     if ($DataOnly) {
-        return Get-FormattedNqlOutput -Data $ApiResponse
+        $ApiResponseObject = $ApiResponse | ConvertFrom-Csv
+        return $ApiResponseObject
     } else {
         # Modify response with proper datetime field for execution
         if ($ApiResponse.executionDateTime.Year -ge 2023) {
