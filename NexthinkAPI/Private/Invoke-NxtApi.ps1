@@ -38,10 +38,24 @@
     }
 
     try {
+        if ($Type -eq "NQL_Export") {       
+            # We will get a 303 redirect to download so we need to split it up into 2 calls
+            # The first call will get the redirect URL we need to pull down the data.
+            $response303 = Invoke-WebRequest @invokeParams -MaximumRedirection 0
+            if ($null -ne $response303.Headers.Location) {
+                $invokeParams.Uri = $Config._API.BASE + $MAIN.APIs.$Type.uri303 + $response303.headers.Location
+                $invokeParams.Method = $MAIN.APIs.$Type.Method303
+                $invokeParams.Remove('Body')
+                Write-CustomLog "Sending $($invokeParams.Method) to $($invokeParams2.Uri)" -Severity "DEBUG"
+            } else {
+                throw "No file to download"
+            }
+        }
+
         $response = Invoke-RestMethod @invokeParams
         $responseJson = $response | ConvertTo-Json -Compress
         Write-CustomLog -Message "Response: $responseJson" -Severity "DEBUG"
-        Write-Verbose "Response: $responseJson"
+        Write-Verbose "Response: $responseJson"    
 
     } catch [System.Net.WebException] {
         # A web error has occurred

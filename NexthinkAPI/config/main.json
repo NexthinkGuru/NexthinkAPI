@@ -64,6 +64,12 @@
             "Method": "POST",
             "uri": "/nql/execute"
         },
+        "NQL_Export": {
+            "Method": "POST",
+            "uri": "/nql/export",
+            "Method303": "GET",
+            "uri303": "/nql/"
+        },
         "WF_Exec": {
             "Method": "POST",
             "uri": "/workflows/execute"
