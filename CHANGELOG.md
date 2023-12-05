@@ -3,6 +3,7 @@
 ### Notable Changes
 
 Changed the NQL query option DataOnly to use new export feature of API
+* New alias (-export) for DataOnly option
 * Supports up to 1M rows (query capped)
 * More details can be found in the [Nexthink API Documentation](https://developer.nexthink.com/docs/api/nql-api%2Foperations%2Fcreate-a-api-v-1-nql-export)
 
