@@ -1,9 +1,9 @@
 ﻿function Invoke-NqlQuery {
     <#
     .SYNOPSIS
-        Triggers NQL Query execution
+        Triggers NQL Query execution api v2
     .DESCRIPTION
-        Triggers the execution of an NQL query, returning up to 100 results
+        Triggers the execution of an NQL query, returning up to 1000 results
     .EXAMPLE
     PS> [PSCustomObject]$myQueryOutput = Invoke-NqlQuery -QueryId "#my_nql_test_query"
     .EXAMPLE
@@ -14,27 +14,19 @@
     .OUTPUTS
         [PSCustomObject]
             queryId             string          Identifier of the executed query
-            executedQuery       string          Final query executed with the parameters replaced
-            rows                integer<int64>  Number of rows returned
+            executedQuery       string          NQL query executed with any parameters replaced
+            rows                int32           Number of rows returned
             executionDateTime   DateTime        Date and time of the execution
-            headers             array[string]   Ordered list with the headers of the returned fields
-            data                array[array]    List of row with the data returned by the query execution object
+            data                arraylist       Arraylist of PS Custom objects for each row of data output
         
     .NOTES
         Times out after 5 seconds.
-        
-        The Execution DateTime is reformatted from the following fields
-            executionDateTime   object          Date and time of the execution
-                year            integer<int64>
-                month           integer<int64>
-                day             integer<int64>
-                hour            integer<int64>
-                minute          integer<int64>
-                second          integer<int64>
+        Using the v2 API
+
     #>
     [CmdletBinding()]
     param(
-        [ValidatePattern('^#[A-z_]{2,255}$')]
+        [ValidatePattern('^#[A-z0-9_]{2,255}$')]
         [parameter(Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
         [string]$QueryId,
@@ -43,39 +35,30 @@
         [hashtable]$Parameters,
 
         [parameter(Mandatory=$false)]
-        [Alias('d, export')]
+        [Alias('d')]
         [switch]$DataOnly
 
     )
     $APITYPE = 'NQL'
-    if ($DataOnly) { $APITYPE += '_Export' }
+    if ($DataOnly) { $APITYPE += '_DataOnly' }
 
-    $body = @{
-        queryId = $QueryId
-    }
+    $body = @{ queryId = $QueryId }
 
-    # Build Add any optional dynamic parameters for the RA
+    # Add optional dynamic parameters for the RA
     if (($null -ne $Parameters) -and ($Parameters.count -ge 1)) {
         $body.Add('parameters', $Parameters)
     }
+
     $bodyJson = $body | ConvertTo-Json -Depth 4
     
     $ApiResponse = Invoke-NxtApi -Type $APITYPE -Body $bodyJson -ReturnResponse
 
     if ($DataOnly) {
-        $ApiResponseObject = $ApiResponse | ConvertFrom-Csv
-        return $ApiResponseObject
+        return [System.Collections.ArrayList]$ApiResponse
     } else {
-        # Modify response with proper datetime field for execution
-        if ($ApiResponse.executionDateTime.Year -ge 2023) {
-            $tmpDT = [String]::Concat($($ApiResponse.executionDateTime.year), '-',
-                                      $($ApiResponse.executionDateTime.month), '-',
-                                      $($ApiResponse.executionDateTime.day), ' ',
-                                      $($ApiResponse.executionDateTime.hour), ':',
-                                      $($ApiResponse.executionDateTime.minute), ':',
-                                      $($ApiResponse.executionDateTime.second))
-            $ApiResponse.executionDateTime = [datetime]::ParseExact($tmpDT, "yyyy-M-d H:m:s", $null)
-        }
+        # perform some data re-formatting
+        $ApiResponse.executionDateTime = [datetime]::ParseExact($ApiResponse.executionDateTime, "yyyy-M-dTH:m:s", $null)
+        $ApiResponse.data = [System.Collections.ArrayList]$ApiResponse.data
         return $ApiResponse
     }
 }

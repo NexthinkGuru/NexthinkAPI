@@ -9,13 +9,17 @@
         [String]$Query = $null,
         [switch]$ReturnResponse
     )
+    $uriBase = $Config._API.BASE
 
-    $uri = $Config._API.BASE + $MAIN.APIs.$Type.uri + $Query
+    if ($null -ne $MAIN.APIs.$Type.BASE) {
+        $uriBase = $uriBase.replace($MAIN.APIs.BASE, $MAIN.APIs.$Type.BASE)
+    }
+    $uri = $uriBase + $MAIN.APIs.$Type.uri + $Query
 
     $method = $MAIN.APIs.$Type.Method
 
     # Ensure we have a JWT that's valid with headers set
-    Set-Headers
+    Set-Headers -Type $Type
 
     # Set base IWR Parameters
     $invokeParams = @{
@@ -24,6 +28,7 @@
         Headers = $Config._API.headers
         ContentType = 'application/json'
     }
+
     $msg = "Invoke Web Request Params: `n$($invokeParams.GetEnumerator() | ForEach-Object { "{0}:{1}" -f $_.key, ($_.value | Out-String) })"
     Write-Verbose ($msg | Out-String)
     Write-CustomLog $msg -Severity "DEBUG"
@@ -38,24 +43,16 @@
     }
 
     try {
-        if ($Type -eq "NQL_Export") {       
-            # We will get a 303 redirect to download so we need to split it up into 2 calls
-            # The first call will get the redirect URL we need to pull down the data.
-            $response303 = Invoke-WebRequest @invokeParams -MaximumRedirection 0
-            if ($null -ne $response303.Headers.Location) {
-                $invokeParams.Uri = $Config._API.BASE + $MAIN.APIs.$Type.uri303 + $response303.headers.Location
-                $invokeParams.Method = $MAIN.APIs.$Type.Method303
-                $invokeParams.Remove('Body')
-                Write-CustomLog "Sending $($invokeParams.Method) to $($invokeParams2.Uri)" -Severity "DEBUG"
-            } else {
-                throw "No file to download"
-            }
+        $response = Invoke-WebRequest @invokeParams
+
+        switch ($invokeParams.Headers.Accept) {
+            'application/json' { $responseData = $response | ConvertFrom-Json }
+            'text/csv'         { $responseData = $response | ConvertFrom-Csv }
+            Default            { $responseData = $response }
         }
 
-        $response = Invoke-RestMethod @invokeParams
-        $responseJson = $response | ConvertTo-Json -Compress
-        Write-CustomLog -Message "Response: $responseJson" -Severity "DEBUG"
-        Write-Verbose "Response: $responseJson"    
+        Write-CustomLog -Message "Response: $response" -Severity "DEBUG"
+        Write-Verbose "Response: $response"    
 
     } catch [System.Net.WebException] {
         # A web error has occurred
@@ -143,6 +140,6 @@
     }
 
     if ($ReturnResponse) {
-        return $response
+        return $responseData
     } 
 }

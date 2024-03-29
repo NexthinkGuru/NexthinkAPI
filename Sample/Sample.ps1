@@ -72,7 +72,7 @@ Invoke-NqlQuery -QueryId $queryId #  -Verbose
 # # #
 # NQL API
 #
-#$params = @{ device_name = 'RAGH-BOX'}
+$QueryId = @{ device_name = 'RAGH-BOX'}
 $queryId = '#a_simple_test'
 Invoke-NqlQuery -QueryId $queryId #  -Verbose
 

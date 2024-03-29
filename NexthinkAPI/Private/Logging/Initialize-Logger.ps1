@@ -32,5 +32,5 @@
     }
     Set-LoggingCallerScope 2
     
-    Write-CustomLog -Message "Logging Enabled - Log Level: INFO" -Severity 'INFO'
+    Write-CustomLog -Message "Logging Enabled - Log Level: $LOG_LEVEL" -Severity $LOG_LEVEL
 }

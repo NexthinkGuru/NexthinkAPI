@@ -35,7 +35,7 @@
     # Retrieve the configuration json file
     New-Variable -Name CONFIG -Scope Script -Value $(Get-Content $Path | ConvertFrom-Json) -Force
     New-Variable -Name BASE_API -Option ReadOnly -Scope Script -Force -Value @{BASE = '';headers = $baseHeaders;expires = [DateTime]0}
-    Add-Member -InputObject $Config -MemberType NoteProperty -name _API -Value $BASE_API -ErrorAction SilentlyContinue
+    Add-Member -InputObject $Config -MemberType NoteProperty -name _API -Value @{BASE = '';headers = $baseHeaders;expires = [DateTime]0} -ErrorAction SilentlyContinue
 
     # Validate configuration
     $errorMessage = @()

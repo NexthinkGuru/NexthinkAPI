@@ -61,14 +61,24 @@
             }
         },
         "NQL": {
+            "BASE": "/api/v2",
             "Method": "POST",
-            "uri": "/nql/execute"
+            "uri": "/nql/execute",
+            "Headers" : {
+                "Accept": "application/json"
+            }
+        },
+        "NQL_DataOnly": {
+            "BASE": "/api/v2",
+            "Method": "POST",
+            "uri": "/nql/execute",
+            "Headers" : {
+                "Accept": "text/csv"
+            }
         },
         "NQL_Export": {
-            "Method": "POST",
-            "uri": "/nql/export",
-            "Method303": "GET",
-            "uri303": "/nql/"
+            "Method": "GET",
+            "uri": "/nql/export"
         },
         "WF_Exec": {
             "Method": "POST",
