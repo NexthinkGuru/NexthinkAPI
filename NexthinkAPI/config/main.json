@@ -39,7 +39,7 @@
         "DETAILS": "/details?nql-id=",
         "OAUTH": {
             "Method": "POST",
-            "uri": "/token"
+            "uri": "/oauth2/default/v1/token"
         },
         "Campaign": {
             "Method": "POST",
@@ -85,6 +85,7 @@
         "device.uid": "device/device/uid",
         "user.sid": "user/user/sid",
         "user.uid": "user/user/uid",
+        "user.upn": "user/user/upn",
         "binary.uid": "binary/binary/uid",
         "package.uid": "package/package/uid"
     }
