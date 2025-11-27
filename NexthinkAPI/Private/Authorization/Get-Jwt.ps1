@@ -14,7 +14,7 @@
     [CmdletBinding()]
     param ()
 
-    $uri = $Config._API.BASE + $MAIN.APIs.OAUTH.uri
+    $uri = "https://{0}-login.{1}.nexthink.cloud{2}" -f $Config.NexthinkAPI.InstanceName, $Config.NexthinkAPI.Region, $MAIN.APIs.OAUTH.uri
     Write-CustomLog -Message "Uri for JWT: $uri" -Severity "DEBUG"
 
     # Invoke-WebRequests usually displays a progress bar. The $ProgressPreference variable determines whether this is displayed (default value = Continue)

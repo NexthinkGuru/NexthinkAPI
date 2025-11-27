@@ -34,7 +34,7 @@
     #>
     [CmdletBinding()]
     param(
-        [ValidatePattern('^#[A-z_]{2,255}$')]
+        [ValidatePattern('^#[A-z0-9_]{2,255}$')]
         [parameter(Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
         [string]$QueryId,
