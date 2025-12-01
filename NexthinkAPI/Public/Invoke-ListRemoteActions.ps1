@@ -1,51 +1,84 @@
 ﻿function Invoke-ListRemoteActions {
-    [OutputType([PSCustomObject])]
     <#
     .SYNOPSIS
-        Lists available Remote Actions
+        Lists available Remote Actions.
     .DESCRIPTION
-        Returns an object of RA's enabled for API Consumption
+        Returns Remote Actions enabled for a given targeting mode (manual, scheduled, api, or all).
+        Optionally filters by a specific Remote Action NQL ID.
     .INPUTS
-        Optional Remote Action ID. This does not accept pipeline input.
-    .LINK
-        https://github.com/NexthinkGuru/NexthinkAPI/blob/main/README.md#remote-actions
-    .LINK
-        https://github.com/NexthinkGuru/NexthinkAPI/blob/main/Public/Invoke-ListRemoteActions.ps1
+        None. This does not accept pipeline input.
     .OUTPUTS
-        Object.
+        [PSCustomObject] (one per Remote Action).
     .NOTES
-        ?hasScriptWindows=true&hasScriptMacOs=false
+        Targeting:
+          - manual   -> targeting.manualEnabled -eq $true
+          - scheduled-> targeting.scheduledEnabled -eq $true
+          - api      -> targeting.apiEnabled -eq $true
+          - all      -> no targeting filter
+
+        2025-11-30: Refactored for stricter validation and module-style patterns
     #>
     [CmdletBinding()]
+    [OutputType([PSCustomObject])]
     param(
-        [parameter(Mandatory=$false)]
-        [Alias('nqlId')]
-        [string]$remoteActionId,
-
-        [ValidateSet("manual", "scheduled", "api", "all")]
-        [string]$Targeting = "scheduled"
-        
-    )
-    $APITYPE = 'RA_List'
-
-    $query = $null
-
-    if ($null -ne $remoteActionId -and '' -ne $remoteActionId) {
-        $remoteActionIdEncoded = [System.Web.HttpUtility]::UrlEncode($remoteActionId)
-        $query = -join ($MAIN.APIs.DETAILS,$remoteActionIdEncoded)
-        Write-Verbose "Query: $query"
-    }
-
-    $actionList = Invoke-NxtApi -Type $APITYPE -Query $query -ReturnResponse
- 
-    # Process through the responses, only returning the ones we want.
-    if ($null -ne $actionList) {
-        foreach ($RA in $actionList) {
-            if ($RA.targeting.apiEnabled) { 
-                $RA
+        [Parameter(Mandatory = $false)]
+        [Alias('NqlId')]
+        [ValidateScript({
+            if ([string]::IsNullOrWhiteSpace($_)) {
+                return $true
             }
-        } 
-    } else {
-        $actionList
+            if (-not (Test-IsValidNqlId $_)) {
+                throw "Invalid NQL Query ID: $_"
+            }
+            $true
+        })]
+        [string]$RemoteActionId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateSet('manual','scheduled','api','all')]
+        [string]$Targeting = 'api'
+    )
+
+    $apiType = 'RA_List'
+    $query   = $null
+
+    # If a specific RA is requested, build the details URL
+    if (-not [string]::IsNullOrWhiteSpace($RemoteActionId)) {
+        $remoteActionIdEncoded = [System.Web.HttpUtility]::UrlEncode($RemoteActionId)
+        $query = -join ($MAIN.APIs.$apiType.Details, $remoteActionIdEncoded)
+
+        Write-CustomLog -Message ("Invoke-ListRemoteActions: Query (details) = {0}" -f $query) -Severity 'DEBUG'
     }
+    else {
+        Write-CustomLog -Message "Invoke-ListRemoteActions: Listing all Remote Actions" -Severity 'DEBUG'
+    }
+
+    # Call API
+    $actionList = Invoke-NxtApi -Type $apiType -Query $query -ReturnResponse
+
+    if (-not $actionList) {
+        Write-CustomLog -Message "Invoke-ListRemoteActions: No Remote Actions returned from API." -Severity 'DEBUG'
+        return @()
+    }
+
+    # Normalize to array in case a single object is returned
+    if ($actionList -isnot [System.Collections.IEnumerable] -or $actionList -is [string]) {
+        $actionList = @($actionList)
+    }
+
+    # Apply targeting filter
+    $filtered = switch ($Targeting) {
+
+        'api'       { $actionList | Where-Object { $_.targeting.apiEnabled } }
+        'manual'    { $actionList | Where-Object { $_.targeting.manualEnabled } }
+        'scheduled' { $actionList | Where-Object { $_.targeting.scheduledEnabled } }
+        'all'       { $actionList }
+    }
+
+    Write-CustomLog -Message (
+        "Invoke-ListRemoteActions: Returning {0} Remote Action(s) for targeting='{1}'." -f `
+            (@($filtered).Count), $Targeting
+    ) -Severity 'DEBUG'
+
+    return $filtered
 }

@@ -1,27 +1,18 @@
 {
     "_Info": "This is the JSON based configuration for the Nexthink Infinity API's",
     "Logging": {
-        "LogRetentionDays": 7,
+        "LogRetentionDays": 21,
         "LogLevel": "DEBUG",
         "Path": "./Logs/"
     },
-    "NexthinkAPI_pre-release": {
-        "InstanceName": "pre-release",
-        "Region": "eu.dev",
-        "OAuthCredentialEntry": "prerelease-dev",
-        "RequestBatchSize": 1000
-    },
     "NexthinkAPI": {
-        "InstanceName": "psna",
-        "Region": "eu.pre",
-        "OAuthCredentialEntry": "psna-test-1",
-        "_OAuthCredentialEntry": "psna_nqltest-1",
+        "InstanceName": "naps",
+        "Region": "us",
+        "OAuthCredentialEntry": "naps-oauth",
         "RequestBatchSize": 1000
     },
-    "NexthinkAPISandbox": {
-        "InstanceName": "sandbox-06",
-        "Region": "eu.pre",
-        "OAuthCredentialEntry": "sb06-1",
-        "RequestBatchSize": 1000
+    "Proxy": {
+        "UseSystemProxy": true,
+        "UseDefaultCredentials": false
     }
 }

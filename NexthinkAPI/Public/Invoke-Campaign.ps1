@@ -1,64 +1,106 @@
 ﻿function Invoke-Campaign {
     <#
     .SYNOPSIS
-        Triggers Campaign to Users
+        Triggers a Nexthink Campaign for one or more users.
     .DESCRIPTION
-        Triggers the execution of Remote Actions for 1 or more devivces
+        Calls the Nexthink Campaign API to trigger a campaign for the specified user SIDs,
+        with optional parameters and an expiration window.
     .INPUTS
-        CampaignId - Campaign NQL ID
-        Users - List (Array) of User SID values
-        Parameters - (hashtable) Optional parameter/values
-        expiresInMinutes - Campaign expiration in minutes (1-525600) - Defaults to 60m
-        This does not accept pipeline input.
+        None. This does not accept pipeline input.
     .OUTPUTS
-        Object. 
+        The response object returned by Invoke-NxtApi.
     .NOTES
         2023.09.27: Updated to support Parameters
+        2025.11.xx: Refactored for stricter validation and module-style patterns
     #>
     [CmdletBinding()]
     param(
-        [parameter(Mandatory=$true)]
+        [Parameter(
+            Mandatory = $true,
+            Position  = 0
+        )]
         [ValidateNotNullOrEmpty()]
+        [ValidateScript({
+            if (-not (Test-IsValidNqlId $_)) {
+                throw "Invalid NQL Query ID: $_"
+            }
+            $true
+        })]
         [Alias('CampaignNqlId')]
         [string]$CampaignId,
 
-        [parameter(Mandatory=$true)]
+        [Parameter(
+            Mandatory = $true,
+            Position  = 1
+        )]
         [ValidateNotNullOrEmpty()]
         [Alias('UserIdList')]
-        [Array]$Users,
+        [string[]]$Users,
 
-        # A key value hashtable of parameters for the Campaign
-        [parameter(Mandatory=$false)]
+        # A key/value hashtable of parameters for the Campaign
+        [Parameter(Mandatory = $false)]
         [hashtable]$Parameters,
-                
-        [ValidateScript({($_ -ge 1) -and 
-                         ($_ -le 525600)})]
+
+        [Parameter(Mandatory = $false)]
+        [ValidateScript({
+            if ($_ -lt 1 -or $_ -gt 525600) {
+                throw "ExpiresInMinutes must be between 1 and 525600 (inclusive)."
+            }
+            $true
+        })]
         [Alias('Expires')]
-        [Int]$ExpiresInMinutes = 60
+        [int]$ExpiresInMinutes = 60
     )
-    $APITYPE = 'Campaign'
 
-    # Validate the Users containt SID values
-    $users | ForEach-Object ({
-        if ($_ -notmatch 'S-1-[0-5][0-9]-\d{1,2}-\d{8,10}-\d{8,10}-\d{8,10}-[1-9]\d{3,9}') {
-            $message = "Invalid SID format for one or more users. $_"
-            Write-CustomLog -Message $message -Severity "ERROR"
-            Throw $($message)
+    $apiType = 'Campaign'
+
+    # ----------------------------------------------------------------
+    # Validate Users array and SID formats
+    # ----------------------------------------------------------------
+    if (-not $Users -or $Users.Count -eq 0) {
+        $message = "Users parameter cannot be empty. At least one user SID is required."
+        Write-CustomLog -Message $message -Severity 'ERROR'
+        throw $message
+    }
+
+    if ($Users.Count -gt 10000) {
+        $message = "The Maximum number or users per API call is 10,000. You provided $($Users.Count)."
+        Write-CustomLog -Message $message -Severity 'ERROR'
+        throw $message
+    }
+
+    foreach ($sid in $Users) {
+        if (-not (Test-IsValidSID $sid)) {
+            $message = "Invalid SID format for user: $sid"
+            Write-CustomLog -Message $message -Severity 'ERROR'
+            throw $message
         }
-    })
+    }
 
+    # ----------------------------------------------------------------
+    # Build request body
+    # ----------------------------------------------------------------
     $body = @{
-        campaignNqlId = $CampaignId
-        userSid = $users
+        campaignNqlId    = $CampaignId
+        userSid          = $Users
         expiresInMinutes = $ExpiresInMinutes
     }
 
-    # Build Add any optional dynamic parameters for the RA
-    if (($null -ne $Parameters) -and ($Parameters.count -ge 1)) {
-        $body.Add('params', $Parameters)
+    if ($Parameters -and $Parameters.Count -gt 0) {
+        $body['params'] = $Parameters
     }
-    
+
     $bodyJson = $body | ConvertTo-Json -Depth 4
 
-    Invoke-NxtApi -Type $APITYPE -Body $bodyJson
+    Write-CustomLog -Message (
+        "Invoking Campaign API. CampaignId='{0}', Users={1}, ExpiresInMinutes={2}" -f `
+            $CampaignId,
+            $Users.Count,
+            $ExpiresInMinutes
+    ) -Severity 'DEBUG'
+
+    # ----------------------------------------------------------------
+    # Call API and return response
+    # ----------------------------------------------------------------
+    return Invoke-NxtApi -Type $apiType -Body $bodyJson -ReturnResponse
 }

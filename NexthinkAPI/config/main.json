@@ -1,6 +1,6 @@
 ﻿{
     "ResponseCodes": {
-        "Enrich": [
+        "Enrichment": [
             {
                 "Code": 207,
                 "Status": "Partial success enrichment response",
@@ -16,9 +16,26 @@
         ],
         "NQL": [
             {
+                "Code": 401,
+                "Status": "Unauthorized",
+                "Message": "No valid authentication credentials",
+                "keys": "message,code,source"
+            },
+            {
+                "Code": 403,
+                "Status": "Forbidden",
+                "Message": "Not authorized to execute queries",
+                "keys": "message,code,source"
+            },
+            {
                 "Code": 404,
-                "Status": "Query not found",
-                "Message": "Given queryId doesn't exist"
+                "Status": "Not found",
+                "Message": "No query associated with that ID"
+            },
+            {
+                "Code": 406,
+                "Status": "Not Acceptable",
+                "Message": "The Accept header should be \"application/json\", \"text/csv\" or empty"
             },
             {
                 "Code": 500,
@@ -28,58 +45,59 @@
             },
             {
                 "Code": 503,
-                "Status": "Internal error",
-                "Message": "Internal error"
+                "Status": "Service unavailable",
+                "Message": "Service unavailable"
             }
         ]
     },
-
     "APIs": {
-        "BASE": "/api/v1",
-        "DETAILS": "/details?nql-id=",
-        "OAUTH": {
+        "BASE": "/api",
+        "OAuth": {
             "Method": "POST",
-            "uri": "/oauth2/default/v1/token"
+            "Path": "/oauth2/default/v1/token"
         },
         "Campaign": {
             "Method": "POST",
-            "uri": "/euf/campaign/trigger"
+            "Path": "/v1/euf/campaign/trigger"
         },
         "RA_Exec": {
             "Method": "POST",
-            "uri": "/act/execute"
+            "Path": "/v1/act/execute"
         },
         "RA_List": {
             "Method": "GET",
-            "uri": "/act/remote-action"
+            "Path": "/v1/act/remote-action",
+            "Details": "/details?nql-id="
         },
-        "Enrich": {
+        "Enrichment": {
             "Method": "POST",
-            "uri": "/enrichment/data/fields",
-            "Headers" : {
+            "Path": "/v1/enrichment/data/fields",
+            "Headers": {
                 "x-enrichment-trace-id": "([guid]::NewGuid()).Guid"
             }
         },
         "NQL": {
             "Method": "POST",
-            "uri": "/nql/execute"
+            "Path": "/v2/nql/execute"
         },
         "NQL_Export": {
             "Method": "POST",
-            "uri": "/nql/export",
-            "Method303": "GET",
-            "uri303": "/nql/"
+            "Path": "/v1/nql/export"
+        },
+        "NQL_Export_Status": {
+            "Method": "GET",
+            "Path": "/v1/nql/status/"
         },
         "WF_Exec": {
             "Method": "POST",
-            "uri": "/workflows/execute"
+            "Path": "/v2/workflows/execute"
         },
         "WF_List": {
             "Method": "GET",
-            "uri": "/workflows"
+            "Path": "/v1/workflows",
+            "Details": "/details?nql-id="
         }
     },
-
     "EnrichmentIDMap": {
         "device.name": "device/device/name",
         "device.uid": "device/device/uid",
@@ -89,6 +107,4 @@
         "binary.uid": "binary/binary/uid",
         "package.uid": "package/package/uid"
     }
-
 }
-

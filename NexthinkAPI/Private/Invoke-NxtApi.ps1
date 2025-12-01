@@ -2,7 +2,7 @@
     [OutputType([PSCustomObject])]
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [String]$Type,
         [String]$Body = $null,
@@ -10,54 +10,37 @@
         [switch]$ReturnResponse
     )
 
-    $uri = $Config._API.BASE + $MAIN.APIs.$Type.uri + $Query
-
+    # Query is a possible code injection after the base path - need to fix this later
+    $uri = $Config._API.BASE + $MAIN.APIs.$Type.Path + $Query
+    Write-CustomLog -Message "URI: $uri" -Severity "DEBUG"
     $method = $MAIN.APIs.$Type.Method
 
-    # Ensure we have a JWT that's valid with headers set
-    Set-Headers
+    Set-Headers  # Ensure we have a valid JWT
 
-    # Set base IWR Parameters
+    # Set base Parameters
     $invokeParams = @{
-        Uri = $uri
-        Method = $method
-        Headers = $Config._API.headers
-        ContentType = 'application/json'
+        Uri         = $uri
+        Method      = $method
+        Headers     = $Config._API.headers
     }
-    $msg = "Invoke Web Request Params: `n$($invokeParams.GetEnumerator() | ForEach-Object { "{0}:{1}" -f $_.key, ($_.value | Out-String) })"
-    Write-Verbose ($msg | Out-String)
-    Write-CustomLog $msg -Severity "DEBUG"
+    if ($method -in @('POST','PUT','PATCH')) {
+        $invokeParams.Add('ContentType', 'application/json')
+    }
+    $msgParameters = $invokeParams.GetEnumerator() | ForEach-Object { "{0}:{1}" -f $_.key, ($_.value | Out-String) }
+    Write-CustomLog "Invoke Web Request Params: `n$msgParameters" -Severity "DEBUG"
 
     # Add a body if we have one
     if ($null -ne $Body -and '' -ne $Body) {
         $invokeParams.Add('Body', $Body)
-        $msg = "Request Body: 
-    $Body"
-        Write-Verbose ($msg | Out-String)
-        Write-CustomLog $msg -Severity "DEBUG"
+        Write-CustomLog "Request Body: `n$Body" -Severity "DEBUG"
     }
 
     try {
-        if ($Type -eq "NQL_Export") {       
-            # We will get a 303 redirect to download so we need to split it up into 2 calls
-            # The first call will get the redirect URL we need to pull down the data.
-            $response303 = Invoke-WebRequest @invokeParams -MaximumRedirection 0
-            if ($null -ne $response303.Headers.Location) {
-                $invokeParams.Uri = $Config._API.BASE + $MAIN.APIs.$Type.uri303 + $response303.headers.Location
-                $invokeParams.Method = $MAIN.APIs.$Type.Method303
-                $invokeParams.Remove('Body')
-                Write-CustomLog "Sending $($invokeParams.Method) to $($invokeParams2.Uri)" -Severity "DEBUG"
-            } else {
-                throw "No file to download"
-            }
-        }
-
         $response = Invoke-RestMethod @invokeParams
         $responseJson = $response | ConvertTo-Json -Compress
         Write-CustomLog -Message "Response: $responseJson" -Severity "DEBUG"
-        Write-Verbose "Response: $responseJson"    
-
-    } catch [System.Net.WebException] {
+    }
+    catch [System.Net.WebException] {
         # A web error has occurred
         $statusCode = $_.Exception.Response.statusCode.Value__
         $errorDetails = $_.ErrorDetails.Message | ConvertFrom-Json
@@ -68,7 +51,7 @@
         if ($null -eq $MAIN.ResponseCodes.$Type) {
             $lookupType = $Type -replace "_.*$"
         }
-        
+
         # Start error message
         $message = @()
         switch ($statusCode) {
@@ -79,16 +62,17 @@
                     $message += "Many errors presented"
                     $message += "--> Json list of errors"
                     $message += ($errrorDetails.errors | ConvertTo-Json -Depth 8 -Compress | out-string)
-                } else {
+                }
+                else {
                     $message += "--> $errorCode"
                 }
             }
-            401 { 
+            401 {
                 $message += "Unauthorized(401) - No valid authentication credentials."
                 $message += ''
                 $message += '--> Ensure these credentials have access to the requested action'
             }
-            403 { 
+            403 {
                 $message += "No Permission(403) - No permission to perform requested action."
                 $message += ''
                 $message += "--> Please verify the credentials have access to the $lookupType API"
@@ -102,16 +86,16 @@
             429 {
                 # Too may requests, pause and repeat?!?
                 $retryAfter = $_.Exception.Response.Headers.'Retry-After'
-                $message += "Slow Down!!, Speed Racer."
+                $message += "Slow Down, Speed Racer!!"
                 $message += ''
                 $message += "Retry After $retryAfter"
-                #When throttling occurs, the API returns the HTTP status code 429, and the requests fail. 
+                #When throttling occurs, the API returns the HTTP status code 429, and the requests fail.
                 #It is best practice to catch 429 responses in your code and retry the request after a suitable waiting period.
                 #Refer to the value specified in the Retry-After header from the response.
             }
             Default {
                 $responseCodes = $MAIN.ResponseCodes.$lookupType
-                $matchedCode = $responseCodes | where-Object {$_.Code -eq $statusCode}
+                $matchedCode = $responseCodes | where-Object { $_.Code -eq $statusCode }
                 if ($null -ne $matchedCode) {
                     $message += $matchedCode.Status
                     $message += $matchedCode.message
@@ -125,24 +109,26 @@
                             $message += "--> $subMessage"
                         }
                     }
-                } else {
+                }
+                else {
                     $message += "Error: $errorCode"
                 }
             }
         }
-        
+
         $message += "--> Error Message:"
         $message += "Message: $errorMessage"
 
         Write-Error -message ($message | out-string) -ErrorId $errorCode
         Write-CustomLog -Message ($message | out-string) -Severity 'ERROR'
-        
+
         throw $($errorCode -as [int])
-    } catch {
+    }
+    catch {
         throw $_
     }
 
     if ($ReturnResponse) {
         return $response
-    } 
+    }
 }

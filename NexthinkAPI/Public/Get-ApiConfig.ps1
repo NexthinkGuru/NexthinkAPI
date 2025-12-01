@@ -6,5 +6,5 @@
     } else {
         Write-Warning "No Config - Initialize the NexthinkAPI."
     }
-    
+
 }

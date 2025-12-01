@@ -104,7 +104,7 @@ $fieldName  = 'device.#biosUpToDate'    # The name of the field we need to enric
 $objectIDName = 'device.name'             # The name of the field to be used to ID the object
 
 $objectID_ValueMap = @{                   # hashtable of data values.
-    'SENATORMARC' = 'duh2'
+    'DEVICE-123' = 'duh2'
     'RAGH-BOX' = "Nope2"
 }
 
@@ -148,7 +148,7 @@ Invoke-NqlQuery -QueryId $queryId
 $params = @{ 
   device_name = 'RAGH-BOX'
 }
-Invoke-NqlQuery -QueryId "#my_nql_query_id" -params $param
+Invoke-NqlQuery -QueryId "#my_nql_query_id" -Parameters $params
 
 # Many times we want just the data in a nice powershell object vs the Array we get from the raw API
 # In that case, just put the Data Only flag on the query.  This works with parameters or not.
@@ -158,5 +158,5 @@ Invoke-NqlQuery -QueryId $queryId -DataOnly
 
 ## Authors
   
-- Current: [Pat Gudat](https://github.com/NexthinkGuru)
+- Current: [Trisha Gudat](https://github.com/NexthinkGuru)
   
