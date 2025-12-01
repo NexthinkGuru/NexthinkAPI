@@ -1,18 +1,56 @@
 ﻿function Invoke-EnrichmentRequest {
-    <#
-    .SYNOPSIS
-        Enriches Nexthink objects via the Enrichment API.
-    .DESCRIPTION
-        Sends one enrichment payload (or an array of payloads) to the Nexthink
-        Enrichment API endpoint using a PUT-style call.
-    .INPUTS
-        None. This does not accept pipeline input.
-    .OUTPUTS
-        The response object returned by Invoke-NxtApi.
-    .NOTES
-        Expects a structured object/hashtable representing the enrichment payload,
-        not a pre-serialized JSON string.
-    #>
+<#
+.SYNOPSIS
+    Sends enrichment payloads to the Nexthink Enrichment API.
+
+.DESCRIPTION
+    Submits one or more enrichment objects to the Nexthink Enrichment API using
+    a JSON payload. The function expects structured PowerShell objects
+    (hashtables / PSCustomObjects / arrays of such objects) and handles JSON
+    serialization internally.
+
+    Typical usage is to build the payload with helper functions such as
+    New-SingleFieldEnrichment and pass the resulting object to this function.
+
+.PARAMETER Enrichment
+    The enrichment payload to send to the Nexthink Enrichment API.
+
+    Requirements:
+      - Must NOT be $null.
+      - Must NOT be a string (JSON or otherwise). Callers should pass objects,
+        not pre-serialized JSON.
+      - May be:
+          • A single PSCustomObject
+          • A hashtable
+          • An array of PSCustomObjects/hashtables
+
+    The parameter is aliased as -Body for convenience.
+
+.INPUTS
+    None. This function does not accept pipeline input.
+
+.OUTPUTS
+    [object]
+
+    Returns the response object from Invoke-NxtApi for the Enrichment API call.
+
+.EXAMPLE
+    $enrichment = New-SingleFieldEnrichment `
+        -FieldName  'device.#location' `
+        -ObjectName 'device.name' `
+        -ObjectValues @{ 'LAPTOP-001' = 'New York' }
+
+    Invoke-EnrichmentRequest -Enrichment $enrichment
+
+    Builds a single-field enrichment payload and sends it to the Nexthink
+    Enrichment API.
+
+.NOTES
+    - This function performs JSON serialization internally via ConvertTo-Json
+      with a depth of 8 and compression enabled.
+    - If the serialized JSON is empty ("{}" or "[]"), the function throws to
+      prevent sending invalid enrichment requests.
+#>
     [CmdletBinding()]
     [OutputType([object])]
     param(

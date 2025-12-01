@@ -1,162 +1,221 @@
-# Nexthink API
+# NexthinkAPI PowerShell Module
 
-This Powershell Module provides a serices of cmdlets for interacting with the Nexthink REST API and the Nexthink Infinity system
+This PowerShell module provides a set of robust, production-ready cmdlets for interacting with the **Nexthink Infinity APIs**, including Remote Actions, Workflows, Campaigns, NQL Queries, Exports, and Enrichment operations.
 
-**NOTE:**  This is unoffical and not supported by Nexthink S.A.
+> **Note:** This is an **unofficial** community-developed module and is **not supported by Nexthink S.A.**
 
-## Requirements
+---
 
-Requires PowerShell 5.1 or above.
+## 📦 Requirements
 
-Requires PowerShell Module Credential Manager [PowerShell Gallery](https://www.powershellgallery.com/packages/CredentialManager/2.0) with `Install-Module CredentialManager -Scope CurrentUser`.
+### PowerShell
+- Windows PowerShell **5.1** or **PowerShell 7+**
 
-Requires PowerShell Module Logging [PowerShell Gallery](https://www.powershellgallery.com/packages/Logging/4.8.5) with `Install-Module Logging -Scope CurrentUser`.
+### Required Modules
+Install the prerequisites:
 
-## Installation
-
-The NexthinkAPI module can be easily be installed from the [PowerShell Gallery](https://www.powershellgallery.com/packages/NexthinkAPI) with `Install-Module NexthinkAPI -Scope CurrentUser`.
-
-## Session Management/Authentication
-
-### Obtain API Credentials
-
-Log onto your Nexthink Instance, Select **Administration** from the main menu.  Click on **API credentials** in the navigation panel from the Account Management Section.
-
-<https://docs.nexthink.com/platform/latest/api-credentials>
-
-### Setting up stored credentials
-
-On the system that will be running the NexthinkAPI, open PowerShell under the credentials of the local user who will run the commands.  If you aren't logged into the user already, you can use the runas command on the command line: runas /user:<service account> powershell.exe
-
-runas CLI
-In the newly opened PowerShell window, add the API credentials you just created in the Nexthink web interface by writing the following command:
-
-`New-StoredCredential -Target "nxt-ctx-prod" -UserName <ClientID> -Password <ClientSecret> -Persist LocalMachine`
-
-### Create Config file
-  
-  Save the configuration details in a config.json file.
-  
-  Sample
-
-  ```Json
-  {
-    "Logging": {
-        "LogRetentionDays": 7,
-        "LogLevel": "INFO",
-        "Path": "./Logs/"
-    },
-    "NexthinkAPI": {
-        "InstanceName": "<customerInstanceName>",
-        "Region": "<us/eu/ca/ap/...>",
-        "OAuthCredentialEntry": "<Target name from stored credentials>",
-        "RequestBatchSize": "1000"
-    }
-}
+```powershell
+Install-Module CredentialManager -Scope CurrentUser
+Install-Module Logging -Scope CurrentUser
 ```
-  
-### Creating a new session
 
-  Loads the configuration file, retrieves the secure credentials and obtains a Token for API Calls
-  
-```PowerShell
-# Assumes a config.json configuration file is in the current directory
+---
+
+## 📥 Installation
+
+Install the module from the PowerShell Gallery:
+
+```powershell
+Install-Module NexthinkAPI -Scope CurrentUser
+```
+
+---
+
+## 🔐 Authentication & Credentials
+
+### 1️⃣ Create API Credentials in Nexthink
+Navigate to:
+
+**Administration → API Credentials**
+Documentation: https://docs.nexthink.com/platform/latest/api-credentials
+
+### 2️⃣ Store the Credentials Locally
+Run in PowerShell under the service/user account that will execute the module:
+
+```powershell
+Import-Module CredentialManager
+
+# Pop a secure credential prompt
+$cred = Get-Credential -UserName '<ClientID>' -Message 'Enter the Client Secret'
+
+New-StoredCredential -Target 'nxt-prod' -UserName $cred.UserName `
+    -Password ($cred.GetNetworkCredential().Password) -Persist LocalMachine
+```
+
+---
+
+## ⚙️ Configuration
+
+Create a `config.json` file and populate the attributes as shown below:
+
+```json
+{
+  "NexthinkAPI": {
+    "InstanceName": "<your-instance>",
+    "Region": "<your-region>",
+    "OAuthCredentialEntry": "<Windows Credential Manager entry name>"
+  },
+  "Proxy": {
+    "UseSystemProxy": true,
+    "UseDefaultCredentials": false
+  },
+  "Logging": {
+    "LogLevel": "INFO",
+    "LogRetentionDays": 7,
+    "Path": "./Logs/"
+  }
+}
+
+```
+
+The Proxy section is used if you need to use a Web Proxy to access the internet. The system will attempt to use the System Proxy and pass default credentials if enabed.
+
+The LogLevel Options are as follows:
+- DEBUG
+- INFO
+- WARN
+- ERROR
+- FATAL
+
+---
+
+## 🚀 Initialize API Session
+
+```powershell
+# Load config.json from current directory
 Initialize-NexthinkAPI
 
-# Passing a specific configuration file - Useful for different instances
-Initialize-NexthinkAPI -Path .\config\dev_instance.json 
-
+# Or specify a custom configuration file
+Initialize-NexthinkAPI -Path .\config\dev_instance.json
 ```
-  
-### Shows the configuration data used in the API Calls Used to validate the token
 
-```PowerShell
+View loaded configuration:
+
+```powershell
 Get-ApiConfig
 ```
 
-## Remote Actions
-  
-### List the Remote Actions that are available to run via API
+---
 
- ```PowerShell
- # Returns RA's that have API enabled
-  Invoke-ListRemoteActions
+# 📘 Module Functionality
 
-  # List a specific RA details, regardless of API enablement
-  Invoke-ListRemoteActions -remoteActionId "#my_custom_remote_action"
-  ```
+## 🔧 Remote Actions
 
-### Execute a remote action
+### List Remote Actions available via API
 
-  ```PowerShell
-  # Setup for calling a basic RA.
-  $remoteActionId = 'get_chrome_plugins'
-  $deviceIdList = @('2bdb0941-2507-40de-854a-3efa1784b26b','d0debb1b-fc48-4eb1-81fa-8a799b21d108')
-  Invoke-RemoteAction -remoteActionId $remoteActionId -deviceIdList $deviceIdList
-  ```
+```powershell
+Invoke-ListRemoteActions               # API-enabled RA only
+Invoke-ListRemoteActions -Targeting all
+Invoke-ListRemoteActions -RemoteActionId "#my_remote_action"
+```
 
-## Data Enrichment
+### Execute a Remote Action
 
-### Create an enrichment object for a field on a given object table
+```powershell
+$actionId = "#get_chrome_plugins"
+$devices  = @(
+  "2bdb0941-2507-40de-854a-3efa1784b26b",
+  "d0debb1b-fc48-4eb1-81fa-8a799b21d108"
+)
 
-  ```PowerShell
-$fieldName  = 'device.#biosUpToDate'    # The name of the field we need to enrich
-$objectIDName = 'device.name'             # The name of the field to be used to ID the object
+Invoke-RemoteAction -RemoteActionId $actionId -Devices $devices
+```
 
-$objectID_ValueMap = @{                   # hashtable of data values.
-    'DEVICE-123' = 'duh2'
-    'RAGH-BOX' = "Nope2"
+---
+
+## 🧩 Data Enrichment
+
+### Build an enrichment object
+
+```powershell
+$field = "device.#biosUpToDate"
+$obj   = "device.name"
+$values = @{
+  "DEVICE-123" = "Yes"
+  "RAGH-BOX"   = "No"
 }
 
-# Create the enrichment variable to send to the enricher
-# The enrichment variable is merely a powershell custom object in the precise format for converstion to JSON.
-$mySingleFieldEnrichment = New-SingleFieldEnrichment -fieldName $fieldName -objectName $objectIDName -ObjectValues $objectID_ValueMap
+$enrichment = New-SingleFieldEnrichment `
+  -FieldName $field `
+  -ObjectName $obj `
+  -ObjectValues $values
 ```
 
-### Send an enrichment to be processed
+### Send the enrichment
 
-```Powershell
-# Now we can send it to the enricher
-Invoke-EnrichmentRequest -Enrichment $mySingleFieldEnrichment
+```powershell
+Invoke-EnrichmentRequest -Enrichment $enrichment
 ```
 
-## Campaigns
+---
 
-### Send a Campaign
+## 🎯 Campaigns
 
-``` Powershell
-$myCampaignNqlId = "#Whats_for_dinner"
-$UserSIDList = @('<Valid SID 1>,<Valid SID 2>, ...<Valid SID N>')
+```powershell
+$campaign = "#Whats_for_dinner"
+$userSids = @("S-1-5-21-...", "S-1-5-21-...")
 
-# The default timeout for this API call is 60 minutes.  
-Invoke-Campaign -CampaignId $myCampaignNqlId -Users $UserSIDList 
-
-# Set your own timeout by adding an additional parameter (in minutes) <Min 1 / Max 525600>
-Invoke-Campaign -CampaignId $myCampaignNqlId -Users $UserSIDList -Expires 10800
+Invoke-Campaign -CampaignId $campaign -Users $userSids
+Invoke-Campaign -CampaignId $campaign -Users $userSids -Expires 10800
 ```
 
-## NQL
+---
 
-``` Powershell
-# Set the NQL ID of the query
-$queryId = '#a_simple_test'
+## 🔍 NQL Queries
 
-# Make the api call
-Invoke-NqlQuery -QueryId $queryId
+```powershell
+Invoke-NqlQuery -QueryId "#simple_query"
 
-# Some NQL may have parameters
-$params = @{ 
-  device_name = 'RAGH-BOX'
-}
-Invoke-NqlQuery -QueryId "#my_nql_query_id" -Parameters $params
+# With parameters
+Invoke-NqlQuery -QueryId "#parametrized_query" -Parameters @{ device_name = "Laptop-01" }
 
-# Many times we want just the data in a nice powershell object vs the Array we get from the raw API
-# In that case, just put the Data Only flag on the query.  This works with parameters or not.
-Invoke-NqlQuery -QueryId $queryId -DataOnly
-
+# Return only data
+Invoke-NqlQuery -QueryId "#simple_query" -DataOnly
 ```
 
-## Authors
-  
-- Current: [Trisha Gudat](https://github.com/NexthinkGuru)
-  
+---
+
+## 📤 NQL Export
+
+```powershell
+Invoke-NqlExport -QueryId "#export_big_query" -OutputFolder "C:\Exports"
+```
+
+Supports compression modes: `NONE`, `GZIP`, `ZSTD`.
+
+---
+
+## ⚡ Workflows
+
+### Trigger a Workflow
+
+```powershell
+Invoke-Workflow -WorkflowId "#wf_restart_service" -Devices @("uuid1","uuid2")
+
+# Or via user identifiers:
+Invoke-Workflow -WorkflowId "#wf_notify" -Users @{ sid = "S-1-5-21-..." }
+```
+
+---
+
+## 👤 Author
+
+**Trisha Gudat (NexthinkGuru)**
+GitHub: https://github.com/NexthinkGuru
+
+---
+
+## 📄 License
+
+MIT License – free to use, modify, and contribute.
+

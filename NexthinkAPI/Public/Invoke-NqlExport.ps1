@@ -1,48 +1,118 @@
 ﻿function Invoke-NqlExport {
     <#
-    .SYNOPSIS
-        Query Nexthink NQL and exports data
-    .DESCRIPTION
-        Triggers the execution of an NQL query, returning up to to the maximum number of results as an export file
-    .INPUTS
-        Query ID: An identifier for the query​. Once defined this can no longer be changed.
-        Parameters: Optional hashtable of parameters used by the query.
-    .OUTPUTS
-        [PSCustomObject]
-            queryId             string                  Identifier of the executed query
-            executedQuery       string                  Final query executed with the parameters replaced
-            rows                integer<int32>          Number of rows returned
-            executionDateTime   DateTime                Date and time of the execution (in Nexthink Server timezone)
-            data                array[PSCustomObject]   Array of PSCustomObjects containing the data rows (only if -DataOnly is not used)
-    .NOTES
-        Times out after 5 seconds.
-    #>
+.SYNOPSIS
+    Executes a Nexthink NQL export and downloads the result file.
+
+.DESCRIPTION
+    Submits an NQL query export request to Nexthink, polls the export status
+    until completion or error, then downloads the resulting file to the
+    specified output folder.
+
+    This function:
+      - Validates the NQL QueryId format.
+      - Submits an export request with an optional compression mode.
+      - Polls the export status endpoint until:
+          • status = COMPLETED  → downloads the file
+          • status = ERROR      → throws with the error description
+      - Derives the remote file name from the returned URL.
+      - Downloads the file into the given OutputFolder.
+      - Warns if the resulting file is zero bytes.
+      - Returns a FileInfo object for the downloaded file.
+
+.PARAMETER QueryId
+    The NQL Query Identifier to export.
+
+    Example:
+        "#my_nql_export_query"
+
+.PARAMETER Parameters
+    Optional hashtable of key/value pairs representing query parameters.
+    Keys must match the parameter names defined inside the target query.
+
+.PARAMETER Compression
+    The compression mode for the exported data.
+
+    Valid values:
+        NONE  - No compression
+        GZIP  - GZIP-compressed output
+        ZSTD  - Zstandard-compressed output
+
+    Default:
+        NONE
+
+.PARAMETER OutputFolder
+    The directory where the exported file will be downloaded.
+
+    Requirements:
+      - Must exist and be a directory.
+      - Must be writable by the current user.
+
+    Validation:
+      - Uses Test-WritableFolder -Path <OutputFolder> to ensure write access.
+
+.INPUTS
+    None. This function does not accept pipeline input.
+
+.OUTPUTS
+    [System.IO.FileInfo]
+
+    Returns a FileInfo object representing the downloaded export file.
+
+.EXAMPLE
+    Invoke-NqlExport `
+        -QueryId "#my_nql_export_query" `
+        -OutputFolder "C:\Exports"
+
+    Executes the NQL export, polls until completion, and downloads the result
+    into C:\Exports. Returns the FileInfo for the downloaded file.
+
+.EXAMPLE
+    $params = @{
+        fromDate = "2025-11-01"
+        toDate   = "2025-11-30"
+    }
+
+    Invoke-NqlExport `
+        -QueryId "#audit_events_export" `
+        -Parameters $params `
+        -Compression GZIP `
+        -OutputFolder "C:\Exports\Logs"
+
+    Executes a parameterized NQL export with GZIP compression and downloads
+    the resulting file into C:\Exports\Logs.
+
+.NOTES
+    - The export request is submitted to the Nexthink NQL export endpoint and
+      polled every 5 seconds until a terminal status is reached.
+    - Nexthink-side limits (row count, execution time) still apply to the
+      underlying query.
+#>
     [CmdletBinding()]
     param(
         [ValidatePattern('^#[A-z0-9_]{2,255}$')]
-        [parameter(Mandatory=$true)]
+        [parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$QueryId,
 
-        [parameter(Mandatory=$false)]
+        [parameter(Mandatory = $false)]
         [hashtable]$Parameters,
 
-        [ValidateSet('NONE','GZIP','ZSTD', IgnoreCase=$true)]
-        [parameter(Mandatory=$false)]
+        [ValidateSet('NONE', 'GZIP', 'ZSTD', IgnoreCase = $true)]
+        [parameter(Mandatory = $false)]
         [string]$Compression = 'NONE',
 
-        [parameter(Mandatory=$true)]
+        [parameter(Mandatory = $true)]
         [ValidateScript({
-            Test-WritableFolder -Path $_ | Out-Null
-            $true
-        })]
+                Test-WritableFolder -Path $_ | Out-Null
+                $true
+            })]
         [System.IO.DirectoryInfo]$OutputFolder
     )
     $APITYPE = 'NQL_Export'
 
     ## Build the body for the NQL Query execution
     $body = @{
-        queryId = $QueryId
+        queryId     = $QueryId
         compression = $Compression
     }
     # add any optional dynamic parameters
@@ -75,10 +145,12 @@
             $outputFile = [System.IO.FileInfo](Join-Path -Path $OutputFolder -ChildPath $remoteFileName)
 
             break
-        } elseif ($statusResponse.status -eq 'ERROR') {
+        }
+        elseif ($statusResponse.status -eq 'ERROR') {
             Write-CustomLog -Message "NQL Export returned an Error Status" -Severity "ERROR"
             throw "NQL Export Error: $($statusResponse.errorDescription)"
-        } else {
+        }
+        else {
             Write-CustomLog -Message "Export Status: $($statusResponse.status). Waiting..." -Severity "DEBUG"
         }
     }
