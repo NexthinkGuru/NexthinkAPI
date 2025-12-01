@@ -204,6 +204,42 @@ Invoke-Workflow -WorkflowId "#wf_restart_service" -Devices @("uuid1","uuid2")
 
 # Or via user identifiers:
 Invoke-Workflow -WorkflowId "#wf_notify" -Users @{ sid = "S-1-5-21-..." }
+
+# With Parameters:
+$devices = @(
+    @{ collectorUid = '3fa85f64-5717-4562-b3fc-2c963f66afa6' }
+    @{ name        = 'LAPTOP-1234' }
+)
+
+$params = @{
+    reason   = 'Standard workflow run'
+    priority = 1
+}
+
+Invoke-Workflow -WorkflowId '#complex_workflow' -Devices $devices -Parameters $params
+```
+
+Support the v2 api for choosing objects by the following attributes
+- Device - uid, collectorUid, name
+- Users - sid, upn, uid
+
+### List Workflows
+
+```powershell
+# List all active workflows that can be triggered via API
+Invoke-ListWorkflows
+
+# List active workflows that depend on both user and device context
+Invoke-ListWorkflows -Dependency USER_AND_DEVICE
+
+# List all scheduled workflows (active only)
+Invoke-ListWorkflows -TriggerMethod SCHEDULER
+
+# Include all workflows as well
+Invoke-ListWorkflows -FetchOnlyActiveWorkflows:$false
+
+# Get a specific workflow by NQL ID
+Invoke-ListWorkflows -WorkflowId '#workflow_example'
 ```
 
 ---
