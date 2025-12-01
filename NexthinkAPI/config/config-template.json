@@ -1,14 +1,17 @@
 {
     "_Info": "This is the JSON based configuration for the Nexthink Infinity API's",
-    "Logging": {
-        "LogRetentionDays": 7,
-        "LogLevel": "INFO",
-        "Path": "./Logs/"
-    },
     "NexthinkAPI": {
-        "InstanceName": "<customerinstance>",
-        "Region": "<datacenter region>",
-        "OAuthCredentialEntry": "<saved credential entry name>",
-        "RequestBatchSize": "1000"
+        "InstanceName": "<your-instance>",
+        "Region": "<your-region>",
+        "OAuthCredentialEntry": "<Windows Credential Manager entry name>"
+    },
+    "Proxy": {
+        "UseSystemProxy": true,
+        "UseDefaultCredentials": false
+    },
+    "Logging": {
+        "LogLevel": "NONE",
+        "LogRetentionDays": 7,
+        "Path": "./Logs/"
     }
 }

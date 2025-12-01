@@ -1,80 +1,101 @@
 ﻿function Invoke-NqlQuery {
     <#
-    .SYNOPSIS
-        Triggers NQL Query execution
-    .DESCRIPTION
-        Triggers the execution of an NQL query, returning up to 100 results
-    .EXAMPLE
-    PS> [PSCustomObject]$myQueryOutput = Invoke-NqlQuery -QueryId "#my_nql_test_query"
-    .EXAMPLE
-    PS> [PSCustomObject]$myQueryData =nvoke-NqlQuery -QueryId "#my_nql_test_query" -DataOnly
-    .INPUTS
-        Query ID: An identifier for the query​. Once defined this can no longer be changed.
-        Parameters: Optional hashtable of parameters used by the query.
-    .OUTPUTS
+.SYNOPSIS
+    Executes a Nexthink NQL query.
+
+.DESCRIPTION
+    Executes an NQL query by its QueryId and optionally applies parameters.
+    Returns the full query execution result or, when -DataOnly is specified,
+    returns only the data rows.
+
+    The query execution is subject to Nexthink API limits, including:
+      • Up to 1000 returned rows
+      • Server-side timeout of ~5 seconds (enforced by Nexthink)
+
+.PARAMETER QueryId
+    The NQL Query Identifier to execute.
+
+    Must be a valid NQL ID (e.g., "#my_query_id") and is validated using
+    Test-IsValidNqlId.
+
+.PARAMETER Parameters
+    Optional hashtable of key/value pairs representing query parameters.
+    Keys must match the parameter names defined inside the target query.
+
+.PARAMETER DataOnly
+    Switch that returns only the resulting data rows rather than the full
+    execution response object.
+
+.INPUTS
+    None. This function does not accept pipeline input.
+
+.OUTPUTS
+    When -DataOnly is NOT used:
         [PSCustomObject]
-            queryId             string          Identifier of the executed query
-            executedQuery       string          Final query executed with the parameters replaced
-            rows                integer<int64>  Number of rows returned
-            executionDateTime   DateTime        Date and time of the execution
-            headers             array[string]   Ordered list with the headers of the returned fields
-            data                array[array]    List of row with the data returned by the query execution object
-        
-    .NOTES
-        Times out after 5 seconds.
-        
-        The Execution DateTime is reformatted from the following fields
-            executionDateTime   object          Date and time of the execution
-                year            integer<int64>
-                month           integer<int64>
-                day             integer<int64>
-                hour            integer<int64>
-                minute          integer<int64>
-                second          integer<int64>
-    #>
+            queryId             string
+            executedQuery       string
+            rows                int
+            executionDateTime   DateTime     (converted to local .NET DateTime)
+            data                PSCustomObject[]
+
+    When -DataOnly *is* used:
+        PSCustomObject[]        (the 'data' array only)
+
+.EXAMPLE
+    $result = Invoke-NqlQuery -QueryId "#my_nql_test_query"
+
+    Executes the specified query and returns the full response object.
+
+.EXAMPLE
+    $rows = Invoke-NqlQuery -QueryId "#my_nql_test_query" -DataOnly
+
+    Executes the query and returns only the data rows.
+
+.NOTES
+    Nexthink enforces a ~5-second timeout on NQL query execution.
+#>
     [CmdletBinding()]
     param(
-        [ValidatePattern('^#[A-z0-9_]{2,255}$')]
-        [parameter(Mandatory=$true)]
+        [parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
+        [ValidateScript({
+                if (-not (Test-IsValidNqlId $_)) {
+                    throw "Invalid NQL Query ID: $_"
+                }
+                $true
+            })]
         [string]$QueryId,
-                
-        [parameter(Mandatory=$false)]
+
+        [parameter(Mandatory = $false)]
         [hashtable]$Parameters,
 
-        [parameter(Mandatory=$false)]
-        [Alias('d, export')]
+        [parameter(Mandatory = $false)]
         [switch]$DataOnly
 
     )
     $APITYPE = 'NQL'
-    if ($DataOnly) { $APITYPE += '_Export' }
 
-    $body = @{
-        queryId = $QueryId
-    }
-
-    # Build Add any optional dynamic parameters for the RA
+    ## Build the body for the NQL Query execution
+    $body = @{ queryId = $QueryId }
+    # add any optional dynamic parameters
     if (($null -ne $Parameters) -and ($Parameters.count -ge 1)) {
         $body.Add('parameters', $Parameters)
     }
     $bodyJson = $body | ConvertTo-Json -Depth 4
-    
+
     $ApiResponse = Invoke-NxtApi -Type $APITYPE -Body $bodyJson -ReturnResponse
 
     if ($DataOnly) {
-        $ApiResponseObject = $ApiResponse | ConvertFrom-Csv
-        return $ApiResponseObject
-    } else {
+        return $ApiResponse.data
+    }
+    else {
         # Modify response with proper datetime field for execution
-        if ($ApiResponse.executionDateTime.Year -ge 2023) {
-            $tmpDT = [String]::Concat($($ApiResponse.executionDateTime.year), '-',
-                                      $($ApiResponse.executionDateTime.month), '-',
-                                      $($ApiResponse.executionDateTime.day), ' ',
-                                      $($ApiResponse.executionDateTime.hour), ':',
-                                      $($ApiResponse.executionDateTime.minute), ':',
-                                      $($ApiResponse.executionDateTime.second))
-            $ApiResponse.executionDateTime = [datetime]::ParseExact($tmpDT, "yyyy-M-d H:m:s", $null)
+        try {
+            $local:executionDateTime = [DateTime]::ParseExact($ApiResponse.executionDateTime, "yyyy-MM-ddTHH:mm:ss", $null)
+            $ApiResponse.executionDateTime = $local:executionDateTime
+        }
+        catch {
+            Write-CustomLog -Message "Failed to parse executionDateTime: $($_.Exception.Message)" -Severity "WARNING"
         }
         return $ApiResponse
     }
