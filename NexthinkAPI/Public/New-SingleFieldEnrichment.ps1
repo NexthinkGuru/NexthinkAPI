@@ -141,7 +141,6 @@
             -ObjectValues $values
 
         Invoke-EnrichmentRequest -Enrichment $payload
-
     #>
     [CmdletBinding()]
     [OutputType([PSCustomObject])]
@@ -154,72 +153,21 @@
         # Object name (friendly shorthand) – we map this to the full enrichment ID
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [ValidateSet(
-            'device.name',
-            'device.uid',
-            'user.sid',
-            'user.uid',
-            'user.upn',
-            'binary.uid',
-            'package.uid'
-        )]
+        [ValidateSet('device.name','device.uid','user.sid','user.uid','user.upn','binary.uid','package.uid')]
         [string]$ObjectName,
 
         # Hashtable of object identifier -> field value
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidateScript({
-            if ($_.Count -eq 0) {
-                throw "ObjectValues must contain at least one key/value pair."
-            }
-            $true
-        })]
+                if ($_.Count -eq 0) { throw "ObjectValues must contain at least one key/value pair."}
+                $true
+            })]
         [hashtable]$ObjectValues
     )
 
-    # ----------------------------------------------------------------
-    # Map friendly ObjectName to full enrichment object IDs
-    # ----------------------------------------------------------------
-    $objectMap = @{
-        'device.name'   = 'device/device/name'
-        'device.uid'    = 'device/device/uid'
-        'user.sid'      = 'user/user/sid'
-        'user.uid'      = 'user/user/uid'
-        'user.upn'      = 'user/user/upn'
-        'binary.uid'    = 'binary/binary/uid'
-        'package.uid'   = 'package/package/uid'
-    }
-
-    # ----------------------------------------------------------------
-    # Map friendly FieldName to full enrichment field path
-    # ----------------------------------------------------------------
-    $fixedFieldMap = @{
-        # Device fields
-        'device.configuration_tag'                 = 'device/device/configuration_tag'
-        'device.virtualization.desktop_broker'     = 'device/device/virtualization/desktop_broker'
-        'device.virtualization.desktop_pool'       = 'device/device/virtualization/desktop_pool'
-        'device.virtualization.disk_image'         = 'device/device/virtualization/disk_image'
-        'device.virtualization.environment_name'   = 'device/device/virtualization/environment_name'
-        'device.virtualization.hostname'           = 'device/device/virtualization/hostname'
-        'device.virtualization.hypervisor_name'    = 'device/device/virtualization/hypervisor_name'
-        'device.virtualization.instance_size'      = 'device/device/virtualization/instance_size'
-        'device.virtualization.last_update'        = 'device/device/virtualization/last_update'
-        'device.virtualization.region'             = 'device/device/virtualization/region'
-        'device.virtualization.type'               = 'device/device/virtualization/type'
-
-        # User AD fields
-        'user.ad.city'                  = 'user/user/ad/city'
-        'user.ad.country_code'          = 'user/user/ad/country_code'
-        'user.ad.department'            = 'user/user/ad/department'
-        'user.ad.distinguished_name'    = 'user/user/ad/distinguished_name'
-        'user.ad.email_address'         = 'user/user/ad/email_address'
-        'user.ad.full_name'             = 'user/user/ad/full_name'
-        'user.ad.job_title'             = 'user/user/ad/job_title'
-        'user.ad.last_update'           = 'user/user/ad/last_update'
-        'user.ad.office'                = 'user/user/ad/office'
-        'user.ad.organizational_unit'   = 'user/user/ad/organizational_unit'
-        'user.ad.username'              = 'user/user/ad/username'
-    }
+    $objectMap = $MAIN.EnrichmentIDMap
+    $fixedFieldMap = $MAIN.EnrichmentFieldMap
 
     # Resolve object ID from the friendly ObjectName
     $objectId = $objectMap[$ObjectName]
@@ -239,21 +187,11 @@
     else {
         # Handle custom field patterns
         # device.#custom, user.#custom, binary.#custom, package.#custom, user.organization.#custom
-        if ($FieldName -match '^device\.#([A-Za-z0-9_]+)$') {
-            $fullFieldName = "device/device/#$($matches[1])"
-        }
-        elseif ($FieldName -match '^user\.#([A-Za-z0-9_]+)$') {
-            $fullFieldName = "user/user/#$($matches[1])"
-        }
-        elseif ($FieldName -match '^binary\.#([A-Za-z0-9_]+)$') {
-            $fullFieldName = "binary/binary/#$($matches[1])"
-        }
-        elseif ($FieldName -match '^package\.#([A-Za-z0-9_]+)$') {
-            $fullFieldName = "package/package/#$($matches[1])"
-        }
-        elseif ($FieldName -match '^user\.organization\.#([A-Za-z0-9_]+)$') {
-            $fullFieldName = "user/user/organization/#$($matches[1])"
-        }
+        if ($FieldName -match '^device\.#([A-Za-z0-9_]+)$') { $fullFieldName = "device/device/#$($matches[1])" }
+        elseif ($FieldName -match '^user\.#([A-Za-z0-9_]+)$') { $fullFieldName = "user/user/#$($matches[1])" }
+        elseif ($FieldName -match '^binary\.#([A-Za-z0-9_]+)$') { $fullFieldName = "binary/binary/#$($matches[1])" }
+        elseif ($FieldName -match '^package\.#([A-Za-z0-9_]+)$') { $fullFieldName = "package/package/#$($matches[1])" }
+        elseif ($FieldName -match '^user\.organization\.#([A-Za-z0-9_]+)$') { $fullFieldName = "user/user/organization/#$($matches[1])" }
         else {
             $validFixed = $fixedFieldMap.Keys | Sort-Object
             $validPatterns = @(
@@ -262,7 +200,7 @@
                 'binary.#<custom_field_name>',
                 'package.#<custom_field_name>',
                 'user.organization.#<custom_field_name>',
-                'user.ad.<field_name>'  # e.g. user.ad.city, user.ad.department
+                'user.ad.<field_name>'
             )
 
             $message = @()
@@ -270,9 +208,7 @@
             $message += "Accepted fixed values include (examples):"
             $message += "  " + ($validFixed -join ", ")
             $message += "Supported patterns:"
-            foreach ($p in $validPatterns) {
-                $message += "  $p"
-            }
+            foreach ($p in $validPatterns) { $message += "  $p"}
 
             $final = $message -join [Environment]::NewLine
             Write-CustomLog -Message $final -Severity 'ERROR'
@@ -280,35 +216,26 @@
         }
     }
 
-    # At this point we have a full field path like device/device/... or user/user/...
-    $fieldId = Get-FieldID -Name $fullFieldName
+    Write-CustomLog -Message (
+        "Enriching field '{0}' (path: '{1}') of object '{2}' with {3} value(s)" -f `
+            $FieldName, $fullFieldName, $objectId, $ObjectValues.Count
+    ) -Severity 'DEBUG'
 
     # Use a strongly-typed list for enrichment items
     $enrichments = [System.Collections.Generic.List[object]]::new()
 
-    Write-CustomLog -Message (
-        "Enriching field '{0}' (path: '{1}') of object '{2}' with {3} value(s)" -f `
-            $fieldId,
-            $fullFieldName,
-            $objectId,
-            $ObjectValues.Count
-    ) -Severity 'DEBUG'
-
     foreach ($objectKey in $ObjectValues.Keys) {
         $objectValue = $ObjectValues[$objectKey]
-
         Write-CustomLog -Message ("Adding {0}: {1}" -f $objectKey, $objectValue) -Severity 'DEBUG'
 
         $identification = [PSCustomObject]@{
             name  = $objectId
             value = $objectKey
         }
-
         $fields = [PSCustomObject]@{
-            name  = $fieldId
+            name  = $fullFieldName
             value = $objectValue
         }
-
         $enrichments.Add(
             [PSCustomObject]@{
                 identification = @($identification)
