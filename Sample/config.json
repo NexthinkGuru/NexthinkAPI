@@ -1,15 +1,14 @@
 {
     "_Info": "This is the JSON based configuration for the Nexthink Infinity API's",
     "Logging": {
-        "LogRetentionDays": 21,
-        "LogLevel": "DEBUG",
+        "LogRetentionDays": 7,
+        "LogLevel": "INFO",
         "Path": "./Logs/"
     },
     "NexthinkAPI": {
-        "InstanceName": "naps",
-        "Region": "us",
-        "OAuthCredentialEntry": "naps-oauth",
-        "RequestBatchSize": 1000
+        "InstanceName": "<customer-instance>",
+        "Region": "<Region> ",
+        "OAuthCredentialEntry": "<credential-name"
     },
     "Proxy": {
         "UseSystemProxy": true,

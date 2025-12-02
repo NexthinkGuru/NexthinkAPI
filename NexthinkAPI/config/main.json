@@ -106,5 +106,29 @@
         "user.upn": "user/user/upn",
         "binary.uid": "binary/binary/uid",
         "package.uid": "package/package/uid"
+    },
+    "EnrichmentFieldMap": {
+        "device.configuration_tag": "device/device/configuration_tag",
+        "device.virtualization.desktop_broker": "device/device/virtualization/desktop_broker",
+        "device.virtualization.desktop_pool": "device/device/virtualization/desktop_pool",
+        "device.virtualization.disk_image": "device/device/virtualization/disk_image",
+        "device.virtualization.environment_name": "device/device/virtualization/environment_name",
+        "device.virtualization.hostname": "device/device/virtualization/hostname",
+        "device.virtualization.hypervisor_name": "device/device/virtualization/hypervisor_name",
+        "device.virtualization.instance_size": "device/device/virtualization/instance_size",
+        "device.virtualization.last_update": "device/device/virtualization/last_update",
+        "device.virtualization.region": "device/device/virtualization/region",
+        "device.virtualization.type": "device/device/virtualization/type",
+        "user.ad.city": "user/user/ad/city",
+        "user.ad.country_code": "user/user/ad/country_code",
+        "user.ad.department": "user/user/ad/department",
+        "user.ad.distinguished_name": "user/user/ad/distinguished_name",
+        "user.ad.email_address": "user/user/ad/email_address",
+        "user.ad.full_name": "user/user/ad/full_name",
+        "user.ad.job_title": "user/user/ad/job_title",
+        "user.ad.last_update": "user/user/ad/last_update",
+        "user.ad.office": "user/user/ad/office",
+        "user.ad.organizational_unit": "user/user/ad/organizational_unit",
+        "user.ad.username": "user/user/ad/username"
     }
 }
