@@ -166,8 +166,13 @@
         [hashtable]$ObjectValues
     )
 
-    $objectMap = $MAIN.EnrichmentIDMap
-    $fixedFieldMap = $MAIN.EnrichmentFieldMap
+    # Convert the enrichment ID and field name mappings to hashtables
+    [hashtable]$objectMap = @{}
+    $Script:MAIN.EnrichmentIDMap.PSObject.Properties | ForEach-Object {
+        $objectMap[$_.Name] = $_.Value }
+    [hashtable]$fixedFieldMap = @{}
+    $Script:MAIN2.EnrichmentFieldMap.PSObject.Properties | ForEach-Object {
+        $fixedFieldMap[$_.Name] = $_.Value }
 
     # Resolve object ID from the friendly ObjectName
     $objectId = $objectMap[$ObjectName]
